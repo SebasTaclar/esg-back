@@ -1,5 +1,5 @@
 import { getPrismaClient } from '../../config/PrismaClient';
-import { IQuoteDataSource, Service } from '../../domain/interfaces/IQuoteDataSource';
+import { IQuoteDataSource, QuoteService } from '../../domain/interfaces/IQuoteDataSource';
 import { Quote, Prisma } from '@prisma/client';
 
 export class QuotePrismaAdapter implements IQuoteDataSource {
@@ -13,7 +13,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { client: true },
+        include: { client: true, project: true },
       }),
       this.prisma.quote.count(),
     ]);
@@ -24,7 +24,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
   async getById(id: number): Promise<Quote | null> {
     return await this.prisma.quote.findUnique({
       where: { id },
-      include: { client: true },
+      include: { client: true, project: true },
     });
   }
 
@@ -37,7 +37,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { client: true },
+        include: { client: true, project: true },
       }),
       this.prisma.quote.count({
         where: { clientId },
@@ -47,35 +47,78 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
     return { quotes, total };
   }
 
+  async getByProjectId(projectId: number, page: number = 1, limit: number = 10): Promise<{ quotes: Quote[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    const [quotes, total] = await Promise.all([
+      this.prisma.quote.findMany({
+        where: { projectId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: { client: true, project: true },
+      }),
+      this.prisma.quote.count({
+        where: { projectId },
+      }),
+    ]);
+
+    return { quotes, total };
+  }
+
   async create(data: {
+    code?: string;
     clientId: number;
-    services: Service[];
+    projectId?: number;
+    status?: string;
     totalAmount: number;
+    validUntil?: string;
+    observations?: string;
+    services: QuoteService[];
   }): Promise<Quote> {
     return await this.prisma.quote.create({
       data: {
+        code: data.code || null,
         clientId: data.clientId,
-        services: data.services as unknown as Prisma.InputJsonValue,
+        projectId: data.projectId || null,
+        status: data.status || 'pendiente',
         totalAmount: data.totalAmount,
+        validUntil: data.validUntil ? new Date(data.validUntil) : null,
+        observations: data.observations || null,
+        services: data.services as unknown as Prisma.InputJsonValue,
       },
-      include: { client: true },
+      include: { client: true, project: true },
     });
   }
 
   async update(
     id: number,
     data: {
-      services?: Service[];
+      code?: string;
+      clientId?: number;
+      projectId?: number;
+      status?: string;
       totalAmount?: number;
+      validUntil?: string;
+      observations?: string;
+      services?: QuoteService[];
     }
   ): Promise<Quote> {
+    const updateData: Record<string, unknown> = {};
+
+    if (data.code !== undefined) updateData.code = data.code;
+    if (data.clientId !== undefined) updateData.clientId = data.clientId;
+    if (data.projectId !== undefined) updateData.projectId = data.projectId;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.totalAmount !== undefined) updateData.totalAmount = data.totalAmount;
+    if (data.validUntil !== undefined) updateData.validUntil = data.validUntil ? new Date(data.validUntil) : null;
+    if (data.observations !== undefined) updateData.observations = data.observations;
+    if (data.services !== undefined) updateData.services = data.services as unknown as Prisma.InputJsonValue;
+
     return await this.prisma.quote.update({
       where: { id },
-      data: {
-        services: data.services as unknown as Prisma.InputJsonValue,
-        totalAmount: data.totalAmount,
-      },
-      include: { client: true },
+      data: updateData,
+      include: { client: true, project: true },
     });
   }
 
@@ -92,6 +135,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
       this.prisma.quote.findMany({
         where: {
           OR: [
+            { code: { contains: query, mode: 'insensitive' } },
             { client: { name: { contains: query, mode: 'insensitive' } } },
             { client: { email: { contains: query, mode: 'insensitive' } } },
           ],
@@ -99,11 +143,12 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { client: true },
+        include: { client: true, project: true },
       }),
       this.prisma.quote.count({
         where: {
           OR: [
+            { code: { contains: query, mode: 'insensitive' } },
             { client: { name: { contains: query, mode: 'insensitive' } } },
             { client: { email: { contains: query, mode: 'insensitive' } } },
           ],

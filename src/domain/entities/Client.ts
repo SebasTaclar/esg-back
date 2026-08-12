@@ -1,23 +1,37 @@
-export type ClientFile = {
+export type Contact = {
   name: string;
-  type: string;
-  key: string;
+  position: string;
+  phone: string;
+  email: string;
+  isPrimary: boolean;
+};
+
+export type Resource = {
+  name: string;
   url: string;
+  type: 'image' | 'document';
+  uploadedAt: string;
 };
 
 export type Client = {
   id: number;
   name: string;
+  nit: string;
+  code?: string;
+  organizationType?: string;
+  norm?: string;
+  city?: string;
+  department?: string;
+  address?: string;
+  phone?: string;
   email: string;
-  phone: string;
-  country: string;
-  companyName?: string;
-  notes?: string;
+  website?: string;
   isActive: boolean;
-  hasPaid: boolean;
-  monthlyAmount?: number;
-  paymentDayMonth?: number;
-  files?: ClientFile[] | null;
+  isProspect: boolean;
+  observations?: string;
+  showResources: boolean;
+  contacts?: Contact[] | null;
+  resources?: Resource[] | null;
   createdAt?: Date;
   updatedAt?: Date;
 };

@@ -1,6 +1,5 @@
 import { getPrismaClient } from '../../config/PrismaClient';
-import { IClientDataSource } from '../../domain/interfaces/IClientDataSource';
-import { StoredFile } from '../../domain/entities/StoredFile';
+import { IClientDataSource, Contact, Resource } from '../../domain/interfaces/IClientDataSource';
 import { Client, Prisma } from '@prisma/client';
 
 export class ClientPrismaAdapter implements IClientDataSource {
@@ -38,32 +37,50 @@ export class ClientPrismaAdapter implements IClientDataSource {
     });
   }
 
+  async getByNit(nit: string): Promise<Client | null> {
+    return await this.prisma.client.findFirst({
+      where: { nit },
+    });
+  }
+
   async create(data: {
     name: string;
+    nit: string;
+    code?: string;
+    organizationType?: string;
+    norm?: string;
+    city?: string;
+    department?: string;
+    address?: string;
+    phone?: string;
     email: string;
-    phone: string;
-    country: string;
-    companyName?: string | null;
-    notes?: string | null;
+    website?: string;
     isActive?: boolean;
-    hasPaid?: boolean;
-    monthlyAmount?: number | null;
-    paymentDayMonth?: number | null;
-    files?: unknown;
+    isProspect?: boolean;
+    observations?: string;
+    showResources?: boolean;
+    contacts?: Contact[];
+    resources?: Resource[];
   }): Promise<Client> {
     return await this.prisma.client.create({
       data: {
         name: data.name,
+        nit: data.nit,
+        code: data.code || null,
+        organizationType: data.organizationType || null,
+        norm: data.norm || null,
+        city: data.city || null,
+        department: data.department || null,
+        address: data.address || null,
+        phone: data.phone || null,
         email: data.email,
-        phone: data.phone,
-        country: data.country,
-        companyName: data.companyName || null,
-        notes: data.notes || null,
+        website: data.website || null,
         isActive: data.isActive ?? true,
-        hasPaid: data.hasPaid ?? false,
-        monthlyAmount: data.monthlyAmount || null,
-        paymentDayMonth: data.paymentDayMonth || null,
-        files: (data.files as Prisma.InputJsonValue) || null,
+        isProspect: data.isProspect ?? false,
+        observations: data.observations || null,
+        showResources: data.showResources ?? false,
+        contacts: (data.contacts as unknown as Prisma.InputJsonValue) || null,
+        resources: (data.resources as unknown as Prisma.InputJsonValue) || null,
       },
     });
   }
@@ -72,29 +89,47 @@ export class ClientPrismaAdapter implements IClientDataSource {
     id: number,
     data: {
       name?: string;
-      email?: string;
+      nit?: string;
+      code?: string;
+      organizationType?: string;
+      norm?: string;
+      city?: string;
+      department?: string;
+      address?: string;
       phone?: string;
-      country?: string;
-      companyName?: string | null;
-      notes?: string | null;
+      email?: string;
+      website?: string;
       isActive?: boolean;
-      hasPaid?: boolean;
-      monthlyAmount?: number | null;
-      paymentDayMonth?: number | null;
+      isProspect?: boolean;
+      observations?: string;
+      showResources?: boolean;
+      contacts?: Contact[];
+      resources?: Resource[];
     }
   ): Promise<Client> {
+    const updateData: Record<string, unknown> = {};
+
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.nit !== undefined) updateData.nit = data.nit;
+    if (data.code !== undefined) updateData.code = data.code;
+    if (data.organizationType !== undefined) updateData.organizationType = data.organizationType;
+    if (data.norm !== undefined) updateData.norm = data.norm;
+    if (data.city !== undefined) updateData.city = data.city;
+    if (data.department !== undefined) updateData.department = data.department;
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.website !== undefined) updateData.website = data.website;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.isProspect !== undefined) updateData.isProspect = data.isProspect;
+    if (data.observations !== undefined) updateData.observations = data.observations;
+    if (data.showResources !== undefined) updateData.showResources = data.showResources;
+    if (data.contacts !== undefined) updateData.contacts = data.contacts as unknown as Prisma.InputJsonValue;
+    if (data.resources !== undefined) updateData.resources = data.resources as unknown as Prisma.InputJsonValue;
+
     return await this.prisma.client.update({
       where: { id },
-      data,
-    });
-  }
-
-  async updateFiles(id: number, files: StoredFile[]): Promise<void> {
-    await this.prisma.client.update({
-      where: { id },
-      data: {
-        files: files as unknown as Prisma.InputJsonValue,
-      },
+      data: updateData,
     });
   }
 
@@ -117,6 +152,8 @@ export class ClientPrismaAdapter implements IClientDataSource {
           OR: [
             { name: { contains: query, mode: 'insensitive' } },
             { email: { contains: query, mode: 'insensitive' } },
+            { nit: { contains: query, mode: 'insensitive' } },
+            { code: { contains: query, mode: 'insensitive' } },
           ],
         },
         skip,
@@ -128,6 +165,8 @@ export class ClientPrismaAdapter implements IClientDataSource {
           OR: [
             { name: { contains: query, mode: 'insensitive' } },
             { email: { contains: query, mode: 'insensitive' } },
+            { nit: { contains: query, mode: 'insensitive' } },
+            { code: { contains: query, mode: 'insensitive' } },
           ],
         },
       }),

@@ -7,6 +7,10 @@ import { PurchaseService } from '../application/services/PurchaseService';
 import { CleanupService } from '../application/services/CleanupService';
 import { ClientService } from '../application/services/ClientService';
 import { QuoteService } from '../application/services/QuoteService';
+import { ProjectService } from '../application/services/ProjectService';
+import { TenderService } from '../application/services/TenderService';
+import { EventService } from '../application/services/EventService';
+import { DocumentService } from '../application/services/DocumentService';
 import { PendingBalanceReminderService } from '../application/services/PendingBalanceReminderService';
 import { MercadoPagoService } from '../infrastructure/services/MercadoPagoService';
 import { EmailService } from '../infrastructure/services/EmailService';
@@ -18,168 +22,152 @@ import { ProductPrismaAdapter } from '../infrastructure/DbAdapters/ProductPrisma
 import { OrderDetailPrismaAdapter } from '../infrastructure/DbAdapters/OrderDetailPrismaAdapter';
 import { ClientPrismaAdapter } from '../infrastructure/DbAdapters/ClientPrismaAdapter';
 import { QuotePrismaAdapter } from '../infrastructure/DbAdapters/QuotePrismaAdapter';
+import { ProjectPrismaAdapter } from '../infrastructure/DbAdapters/ProjectPrismaAdapter';
+import { TenderPrismaAdapter } from '../infrastructure/DbAdapters/TenderPrismaAdapter';
+import { EventPrismaAdapter } from '../infrastructure/DbAdapters/EventPrismaAdapter';
+import { DocumentPrismaAdapter } from '../infrastructure/DbAdapters/DocumentPrismaAdapter';
 import { IUserDataSource } from '../domain/interfaces/IUserDataSource';
 import { ICategoryDataSource } from '../domain/interfaces/ICategoryDataSource';
 import { IProductDataSource } from '../domain/interfaces/IProductDataSource';
 import { IOrderDetailDataSource } from '../domain/interfaces/IOrderDetailDataSource';
 import { IClientDataSource } from '../domain/interfaces/IClientDataSource';
 import { IQuoteDataSource } from '../domain/interfaces/IQuoteDataSource';
+import { IProjectDataSource } from '../domain/interfaces/IProjectDataSource';
+import { ITenderDataSource } from '../domain/interfaces/ITenderDataSource';
+import { IEventDataSource } from '../domain/interfaces/IEventDataSource';
+import { IDocumentDataSource } from '../domain/interfaces/IDocumentDataSource';
 import { getPrismaClient } from '../config/PrismaClient';
 
-/**
- * Service Provider para inyección de dependencias
- * Centraliza la creación de servicios y manejo de dependencias
- */
 export class ServiceProvider {
   private static prismaClient = getPrismaClient();
 
-  /**
-   * Crea una instancia de UserDataSource (actualmente PrismaAdapter)
-   */
   static getUserDataSource(): IUserDataSource {
     return new UserPrismaAdapter();
   }
 
-  /**
-   * Crea una instancia de CategoryDataSource (actualmente PrismaAdapter)
-   */
   static getCategoryDataSource(): ICategoryDataSource {
     return new CategoryPrismaAdapter();
   }
 
-  /**
-   * Crea una instancia de ProductDataSource (actualmente PrismaAdapter)
-   */
   static getProductDataSource(): IProductDataSource {
     return new ProductPrismaAdapter();
   }
 
-  /**
-   * Crea una instancia de OrderDetailDataSource (actualmente PrismaAdapter)
-   */
   static getOrderDetailDataSource(): IOrderDetailDataSource {
     return new OrderDetailPrismaAdapter();
   }
 
-  /**
-   * Crea una instancia de ClientDataSource (actualmente PrismaAdapter)
-   */
   static getClientDataSource(): IClientDataSource {
     return new ClientPrismaAdapter();
   }
 
-  /**
-   * Crea una instancia de QuoteDataSource (actualmente PrismaAdapter)
-   */
   static getQuoteDataSource(): IQuoteDataSource {
     return new QuotePrismaAdapter();
   }
 
-  /**
-   * Crea una instancia de AuthService con sus dependencias inyectadas
-   */
+  static getProjectDataSource(): IProjectDataSource {
+    return new ProjectPrismaAdapter();
+  }
+
+  static getTenderDataSource(): ITenderDataSource {
+    return new TenderPrismaAdapter();
+  }
+
+  static getEventDataSource(): IEventDataSource {
+    return new EventPrismaAdapter();
+  }
+
+  static getDocumentDataSource(): IDocumentDataSource {
+    return new DocumentPrismaAdapter();
+  }
+
   static getAuthService(logger: Logger): AuthService {
     const userDataSource = this.getUserDataSource();
     return new AuthService(logger, userDataSource);
   }
 
-  /**
-   * Crea una instancia de CategoryService con sus dependencias inyectadas
-   */
   static getCategoryService(logger: Logger): CategoryService {
     const categoryDataSource = this.getCategoryDataSource();
     return new CategoryService(logger, categoryDataSource);
   }
 
-  /**
-   * Crea una instancia de ProductService con sus dependencias inyectadas
-   */
   static getProductService(logger: Logger): ProductService {
     const productDataSource = this.getProductDataSource();
     const categoryDataSource = this.getCategoryDataSource();
     return new ProductService(logger, productDataSource, categoryDataSource);
   }
 
-  /**
-   * Crea una instancia de HealthService con sus dependencias inyectadas
-   */
   static getHealthService(logger: Logger): HealthService {
     return new HealthService(logger);
   }
 
-  /**
-   * Crea una instancia de PurchaseService con sus dependencias inyectadas
-   */
   static getPurchaseService(): PurchaseService {
     const orderDetailDataSource = this.getOrderDetailDataSource();
     const productDataSource = this.getProductDataSource();
     return new PurchaseService(this.prismaClient, orderDetailDataSource, productDataSource);
   }
 
-  /**
-   * Crea una instancia de CleanupService con sus dependencias inyectadas
-   */
   static getCleanupService(logger: Logger): CleanupService {
     const mercadoPagoService = this.getMercadoPagoService();
     return new CleanupService(this.prismaClient, mercadoPagoService, logger);
   }
 
-  /**
-   * Crea una instancia de ClientService con sus dependencias inyectadas
-   */
   static getClientService(logger: Logger): ClientService {
     const clientDataSource = this.getClientDataSource();
-    const fileStorageService = this.getFileStorageService(logger);
-    return new ClientService(logger, clientDataSource, fileStorageService);
+    return new ClientService(logger, clientDataSource);
   }
 
-  /**
-   * Crea una instancia de QuoteService con sus dependencias inyectadas
-   */
   static getQuoteService(logger: Logger): QuoteService {
     const quoteDataSource = this.getQuoteDataSource();
     const clientDataSource = this.getClientDataSource();
-    return new QuoteService(logger, quoteDataSource, clientDataSource);
+    const projectDataSource = this.getProjectDataSource();
+    return new QuoteService(logger, quoteDataSource, clientDataSource, projectDataSource);
   }
 
-  /**
-   * Crea una instancia de EmailService con sus dependencias inyectadas
-   */
+  static getProjectService(logger: Logger): ProjectService {
+    const projectDataSource = this.getProjectDataSource();
+    const clientDataSource = this.getClientDataSource();
+    return new ProjectService(logger, projectDataSource, clientDataSource);
+  }
+
+  static getTenderService(logger: Logger): TenderService {
+    const tenderDataSource = this.getTenderDataSource();
+    return new TenderService(logger, tenderDataSource);
+  }
+
+  static getEventService(logger: Logger): EventService {
+    const eventDataSource = this.getEventDataSource();
+    return new EventService(logger, eventDataSource);
+  }
+
+  static getDocumentService(logger: Logger): DocumentService {
+    const documentDataSource = this.getDocumentDataSource();
+    const fileStorageService = this.getFileStorageService(logger);
+    return new DocumentService(logger, documentDataSource, fileStorageService);
+  }
+
   static getEmailService(logger: Logger): EmailService {
     return new EmailService(logger);
   }
 
-  /**
-   * Crea una instancia de PendingBalanceReminderService
-   */
   static getPendingBalanceReminderService(logger: Logger): PendingBalanceReminderService {
     return new PendingBalanceReminderService(this.prismaClient, logger);
   }
 
-  /**
-   * Crea una instancia de MercadoPagoService
-   */
   static getMercadoPagoService(): MercadoPagoService {
     return new MercadoPagoService();
   }
 
-  /**
-   * Crea una instancia de CloudflareR2Service
-   */
   static getR2Service(logger: Logger): CloudflareR2Service {
     return new CloudflareR2Service(logger);
   }
 
-  /**
-   * Crea una instancia de FileStorageService con sus dependencias inyectadas
-   */
   static getFileStorageService(logger: Logger): FileStorageService {
     const r2Service = this.getR2Service(logger);
     return new FileStorageService(logger, r2Service);
   }
 }
 
-// Export directo de las funciones más usadas para mayor conveniencia
 export const getAuthService = (logger: Logger): AuthService => {
   return ServiceProvider.getAuthService(logger);
 };
@@ -232,6 +220,22 @@ export const getQuoteService = (logger: Logger): QuoteService => {
   return ServiceProvider.getQuoteService(logger);
 };
 
+export const getProjectService = (logger: Logger): ProjectService => {
+  return ServiceProvider.getProjectService(logger);
+};
+
+export const getTenderService = (logger: Logger): TenderService => {
+  return ServiceProvider.getTenderService(logger);
+};
+
+export const getEventService = (logger: Logger): EventService => {
+  return ServiceProvider.getEventService(logger);
+};
+
+export const getDocumentService = (logger: Logger): DocumentService => {
+  return ServiceProvider.getDocumentService(logger);
+};
+
 export const getUserDataSource = (): IUserDataSource => {
   return ServiceProvider.getUserDataSource();
 };
@@ -254,4 +258,20 @@ export const getClientDataSource = (): IClientDataSource => {
 
 export const getQuoteDataSource = (): IQuoteDataSource => {
   return ServiceProvider.getQuoteDataSource();
+};
+
+export const getProjectDataSource = (): IProjectDataSource => {
+  return ServiceProvider.getProjectDataSource();
+};
+
+export const getTenderDataSource = (): ITenderDataSource => {
+  return ServiceProvider.getTenderDataSource();
+};
+
+export const getEventDataSource = (): IEventDataSource => {
+  return ServiceProvider.getEventDataSource();
+};
+
+export const getDocumentDataSource = (): IDocumentDataSource => {
+  return ServiceProvider.getDocumentDataSource();
 };

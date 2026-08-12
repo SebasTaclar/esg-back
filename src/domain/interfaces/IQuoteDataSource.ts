@@ -1,6 +1,6 @@
 import { Quote } from '@prisma/client';
 
-export interface Service {
+export interface QuoteService {
   name: string;
   quantity: number;
   billingType: 'MONTHLY' | 'ANNUAL' | 'ONETIME';
@@ -12,16 +12,28 @@ export interface IQuoteDataSource {
   getAll(page: number, limit: number): Promise<{ quotes: Quote[]; total: number }>;
   getById(id: number): Promise<Quote | null>;
   getByClientId(clientId: number, page: number, limit: number): Promise<{ quotes: Quote[]; total: number }>;
+  getByProjectId(projectId: number, page: number, limit: number): Promise<{ quotes: Quote[]; total: number }>;
   create(data: {
+    code?: string;
     clientId: number;
-    services: Service[];
+    projectId?: number;
+    status?: string;
     totalAmount: number;
+    validUntil?: string;
+    observations?: string;
+    services: QuoteService[];
   }): Promise<Quote>;
   update(
     id: number,
     data: {
-      services?: Service[];
+      code?: string;
+      clientId?: number;
+      projectId?: number;
+      status?: string;
       totalAmount?: number;
+      validUntil?: string;
+      observations?: string;
+      services?: QuoteService[];
     }
   ): Promise<Quote>;
   delete(id: number): Promise<void>;

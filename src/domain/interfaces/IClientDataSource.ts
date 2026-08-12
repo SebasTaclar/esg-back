@@ -1,39 +1,66 @@
 import { Client } from '@prisma/client';
-import { StoredFile } from '../entities/StoredFile';
+
+export type Contact = {
+  name: string;
+  position: string;
+  phone: string;
+  email: string;
+  isPrimary: boolean;
+};
+
+export type Resource = {
+  name: string;
+  url: string;
+  type: 'image' | 'document';
+  uploadedAt: string;
+};
 
 export interface IClientDataSource {
   getAll(page?: number, limit?: number): Promise<{ clients: Client[]; total: number }>;
   getById(id: number): Promise<Client | null>;
   getByEmail(email: string): Promise<Client | null>;
+  getByNit(nit: string): Promise<Client | null>;
   create(data: {
     name: string;
+    nit: string;
+    code?: string;
+    organizationType?: string;
+    norm?: string;
+    city?: string;
+    department?: string;
+    address?: string;
+    phone?: string;
     email: string;
-    phone: string;
-    country: string;
-    companyName?: string | null;
-    notes?: string | null;
+    website?: string;
     isActive?: boolean;
-    hasPaid?: boolean;
-    monthlyAmount?: number | null;
-    paymentDayMonth?: number | null;
-    files?: unknown;
+    isProspect?: boolean;
+    observations?: string;
+    showResources?: boolean;
+    contacts?: Contact[];
+    resources?: Resource[];
   }): Promise<Client>;
   update(
     id: number,
     data: {
       name?: string;
-      email?: string;
+      nit?: string;
+      code?: string;
+      organizationType?: string;
+      norm?: string;
+      city?: string;
+      department?: string;
+      address?: string;
       phone?: string;
-      country?: string;
-      companyName?: string | null;
-      notes?: string | null;
+      email?: string;
+      website?: string;
       isActive?: boolean;
-      hasPaid?: boolean;
-      monthlyAmount?: number | null;
-      paymentDayMonth?: number | null;
+      isProspect?: boolean;
+      observations?: string;
+      showResources?: boolean;
+      contacts?: Contact[];
+      resources?: Resource[];
     }
   ): Promise<Client>;
-  updateFiles(id: number, files: StoredFile[]): Promise<void>;
   delete(id: number): Promise<void>;
   search(query: string, page: number, limit: number): Promise<{ clients: Client[]; total: number }>;
 }
