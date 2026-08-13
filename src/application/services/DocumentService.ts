@@ -2,33 +2,94 @@ import { NotFoundError } from '../../shared/exceptions';
 import { Logger } from '../../shared/Logger';
 import { IDocumentDataSource } from '../../domain/interfaces/IDocumentDataSource';
 import { IFileStorageDataSource } from '../../domain/interfaces/IFileStorageDataSource';
+import { IClientDataSource } from '../../domain/interfaces/IClientDataSource';
+import { IProjectDataSource } from '../../domain/interfaces/IProjectDataSource';
+import { IQuoteDataSource } from '../../domain/interfaces/IQuoteDataSource';
+import { ITenderDataSource } from '../../domain/interfaces/ITenderDataSource';
 import { UploadFile } from '../../domain/entities/StoredFile';
-import { DocumentRequest, DocumentResponse } from '../../domain/entities/Document';
+import { DocumentResponse } from '../../domain/entities/Document';
 import { Document } from '@prisma/client';
 
-function toDocumentResponse(doc: Document): DocumentResponse {
-  return {
-    id: doc.id,
-    entityType: doc.entityType,
-    entityId: doc.entityId,
-    name: doc.name,
-    type: doc.type,
-    url: doc.url,
-    size: doc.size,
-    user: doc.user,
-    createdAt: doc.createdAt,
-  };
-}
+const ENTITY_LABELS: Record<string, string> = {
+  client: 'Client',
+  project: 'Project',
+  quote: 'Quote',
+  tender: 'Tender',
+};
 
 export class DocumentService {
   private logger: Logger;
   private documentDataSource: IDocumentDataSource;
   private fileStorage: IFileStorageDataSource;
+  private clientDataSource: IClientDataSource;
+  private projectDataSource: IProjectDataSource;
+  private quoteDataSource: IQuoteDataSource;
+  private tenderDataSource: ITenderDataSource;
 
-  constructor(logger: Logger, documentDataSource: IDocumentDataSource, fileStorage: IFileStorageDataSource) {
+  constructor(
+    logger: Logger,
+    documentDataSource: IDocumentDataSource,
+    fileStorage: IFileStorageDataSource,
+    clientDataSource: IClientDataSource,
+    projectDataSource: IProjectDataSource,
+    quoteDataSource: IQuoteDataSource,
+    tenderDataSource: ITenderDataSource
+  ) {
     this.logger = logger;
     this.documentDataSource = documentDataSource;
     this.fileStorage = fileStorage;
+    this.clientDataSource = clientDataSource;
+    this.projectDataSource = projectDataSource;
+    this.quoteDataSource = quoteDataSource;
+    this.tenderDataSource = tenderDataSource;
+  }
+
+  private async validateEntityExists(entityType: string, entityId: number): Promise<void> {
+    let exists = false;
+
+    switch (entityType) {
+      case 'client': {
+        const entity = await this.clientDataSource.getById(entityId);
+        exists = entity !== null;
+        break;
+      }
+      case 'project': {
+        const entity = await this.projectDataSource.getById(entityId);
+        exists = entity !== null;
+        break;
+      }
+      case 'quote': {
+        const entity = await this.quoteDataSource.getById(entityId);
+        exists = entity !== null;
+        break;
+      }
+      case 'tender': {
+        const entity = await this.tenderDataSource.getById(entityId);
+        exists = entity !== null;
+        break;
+      }
+      default:
+        throw new NotFoundError(`Invalid entity type: ${entityType}`);
+    }
+
+    if (!exists) {
+      const label = ENTITY_LABELS[entityType] || entityType;
+      throw new NotFoundError(`${label} with ID ${entityId} not found`);
+    }
+  }
+
+  private toDocumentResponse(doc: Document): DocumentResponse {
+    return {
+      id: doc.id,
+      entityType: doc.entityType,
+      entityId: doc.entityId,
+      name: doc.name,
+      type: doc.type,
+      url: this.fileStorage.buildPublicUrl(doc.url),
+      size: doc.size,
+      user: doc.user,
+      createdAt: doc.createdAt,
+    };
   }
 
   async getAllDocuments(
@@ -39,7 +100,7 @@ export class DocumentService {
 
     const result = await this.documentDataSource.getAll(page, limit);
     return {
-      documents: result.documents.map(toDocumentResponse),
+      documents: result.documents.map(doc => this.toDocumentResponse(doc)),
       total: result.total,
     };
   }
@@ -48,7 +109,7 @@ export class DocumentService {
     this.logger.info(`Fetching documents for ${entityType}/${entityId}`);
 
     const documents = await this.documentDataSource.getByEntity(entityType, entityId);
-    return documents.map(toDocumentResponse);
+    return documents.map(doc => this.toDocumentResponse(doc));
   }
 
   async getDocumentById(id: number): Promise<DocumentResponse> {
@@ -59,7 +120,7 @@ export class DocumentService {
       throw new NotFoundError(`Document with ID ${id} not found`);
     }
 
-    return toDocumentResponse(doc);
+    return this.toDocumentResponse(doc);
   }
 
   async createDocument(
@@ -71,6 +132,8 @@ export class DocumentService {
   ): Promise<DocumentResponse> {
     this.logger.info(`Creating document for ${entityType}/${entityId}`);
 
+    await this.validateEntityExists(entityType, entityId);
+
     const storedFile = await this.fileStorage.upload(`${entityType}s`, entityId, file);
 
     const doc = await this.documentDataSource.create({
@@ -78,13 +141,13 @@ export class DocumentService {
       entityId,
       name: file.name,
       type: documentType || file.type,
-      url: storedFile.url,
+      url: storedFile.key,
       size: file.buffer.length,
       user,
     });
 
     this.logger.info(`Document created with ID: ${doc.id}`);
-    return toDocumentResponse(doc);
+    return this.toDocumentResponse(doc);
   }
 
   async deleteDocument(id: number): Promise<void> {

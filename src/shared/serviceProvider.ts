@@ -137,13 +137,21 @@ export class ServiceProvider {
 
   static getEventService(logger: Logger): EventService {
     const eventDataSource = this.getEventDataSource();
-    return new EventService(logger, eventDataSource);
+    const clientDataSource = this.getClientDataSource();
+    const projectDataSource = this.getProjectDataSource();
+    const quoteDataSource = this.getQuoteDataSource();
+    const tenderDataSource = this.getTenderDataSource();
+    return new EventService(logger, eventDataSource, clientDataSource, projectDataSource, quoteDataSource, tenderDataSource);
   }
 
   static getDocumentService(logger: Logger): DocumentService {
     const documentDataSource = this.getDocumentDataSource();
     const fileStorageService = this.getFileStorageService(logger);
-    return new DocumentService(logger, documentDataSource, fileStorageService);
+    const clientDataSource = this.getClientDataSource();
+    const projectDataSource = this.getProjectDataSource();
+    const quoteDataSource = this.getQuoteDataSource();
+    const tenderDataSource = this.getTenderDataSource();
+    return new DocumentService(logger, documentDataSource, fileStorageService, clientDataSource, projectDataSource, quoteDataSource, tenderDataSource);
   }
 
   static getEmailService(logger: Logger): EmailService {
