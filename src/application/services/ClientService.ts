@@ -104,11 +104,6 @@ export class ClientService {
   async createClient(data: ClientRequest): Promise<ClientResponse> {
     this.logger.info(`Creating new client with email: ${data.email}`);
 
-    const existingClient = await this.clientDataSource.getByEmail(data.email);
-    if (existingClient) {
-      throw new ConflictError(`Client with email ${data.email} already exists`);
-    }
-
     const existingNit = await this.clientDataSource.getByNit(data.nit);
     if (existingNit) {
       throw new ConflictError(`Client with NIT ${data.nit} already exists`);
@@ -175,13 +170,6 @@ export class ClientService {
     const existingClient = await this.clientDataSource.getById(id);
     if (!existingClient) {
       throw new NotFoundError(`Client with ID ${id} not found`);
-    }
-
-    if (data.email && data.email !== existingClient.email) {
-      const emailExists = await this.clientDataSource.getByEmail(data.email);
-      if (emailExists) {
-        throw new ConflictError(`Email ${data.email} is already in use`);
-      }
     }
 
     if (data.nit && data.nit !== existingClient.nit) {

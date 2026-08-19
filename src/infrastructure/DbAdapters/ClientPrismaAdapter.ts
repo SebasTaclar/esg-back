@@ -32,7 +32,7 @@ export class ClientPrismaAdapter implements IClientDataSource {
   }
 
   async getByEmail(email: string): Promise<Client | null> {
-    return await this.prisma.client.findUnique({
+    return await this.prisma.client.findFirst({
       where: { email },
     });
   }
