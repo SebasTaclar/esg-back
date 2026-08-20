@@ -5,16 +5,28 @@ export type ProjectServiceItem = {
   norm?: string;
   quantity: number;
   unitPrice: number;
+  subtotal: number;
+  discount: number;
+  subtotalWithDiscount: number;
+  iva: number;
   totalPrice: number;
+  rol: string;
   collaborator?: string;
+  billingAccountNumber: string;
+  collaboratorUnitPrice: number;
+  collaboratorTotalPrice: number;
+  pretaxProfit: number;
+  ica: number;
+  simpleTax: number;
+  netProfit: number;
+  entryDate: string;
+  billingDate: string;
+  purchaseOrderDate: string;
+  purchaseOrderNumber: string;
 };
 
 export type ProjectRequest = {
   clientId: number;
-  consecutive: number;
-  abbreviation: string;
-  code: string;
-  projectType?: string;
   serviceType?: string;
   norm?: string;
   status: string;
@@ -30,9 +42,6 @@ export type ProjectRequest = {
 
 export type ProjectResponse = {
   id: number;
-  consecutive: number;
-  abbreviation: string;
-  code: string;
   clientId: number;
   client?: {
     id: number;
@@ -40,7 +49,6 @@ export type ProjectResponse = {
     email: string;
     nit: string;
   };
-  projectType?: string | null;
   serviceType?: string | null;
   norm?: string | null;
   status: string;
@@ -57,11 +65,7 @@ export type ProjectResponse = {
 };
 
 export type UpdateProjectRequest = {
-  consecutive?: number;
-  abbreviation?: string;
-  code?: string;
   clientId?: number;
-  projectType?: string;
   serviceType?: string;
   norm?: string;
   status?: string;

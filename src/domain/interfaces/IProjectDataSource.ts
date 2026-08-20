@@ -7,10 +7,6 @@ export interface IProjectDataSource {
   getByClientId(clientId: number, page?: number, limit?: number): Promise<{ projects: Project[]; total: number }>;
   create(data: {
     clientId: number;
-    consecutive: number;
-    abbreviation: string;
-    code: string;
-    projectType?: string;
     serviceType?: string;
     norm?: string;
     status: string;
@@ -26,11 +22,7 @@ export interface IProjectDataSource {
   update(
     id: number,
     data: {
-      consecutive?: number;
-      abbreviation?: string;
-      code?: string;
       clientId?: number;
-      projectType?: string;
       serviceType?: string;
       norm?: string;
       status?: string;

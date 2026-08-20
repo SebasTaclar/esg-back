@@ -10,14 +10,10 @@ function toProjectResponse(project: Project): ProjectResponse {
   const client = (project as Project & { client?: { id: number; name: string; email: string; nit: string } }).client;
   return {
     id: project.id,
-    consecutive: project.consecutive,
-    abbreviation: project.abbreviation,
-    code: project.code,
     clientId: project.clientId,
     client: client
       ? { id: client.id, name: client.name, email: client.email, nit: client.nit }
       : undefined,
-    projectType: project.projectType,
     serviceType: project.serviceType,
     norm: project.norm,
     status: project.status,
@@ -84,7 +80,7 @@ export class ProjectService {
   }
 
   async createProject(request: ProjectRequest): Promise<ProjectResponse> {
-    this.logger.info(`Creating project with code ${request.code}`);
+    this.logger.info(`Creating project for client ${request.clientId}`);
 
     const client = await this.clientDataSource.getById(request.clientId);
     if (!client) {
@@ -93,10 +89,6 @@ export class ProjectService {
 
     const project = await this.projectDataSource.create({
       clientId: request.clientId,
-      consecutive: request.consecutive,
-      abbreviation: request.abbreviation,
-      code: request.code,
-      projectType: request.projectType,
       serviceType: request.serviceType,
       norm: request.norm,
       status: request.status,
@@ -130,11 +122,7 @@ export class ProjectService {
     }
 
     const updatedProject = await this.projectDataSource.update(id, {
-      consecutive: request.consecutive,
-      abbreviation: request.abbreviation,
-      code: request.code,
       clientId: request.clientId,
-      projectType: request.projectType,
       serviceType: request.serviceType,
       norm: request.norm,
       status: request.status,

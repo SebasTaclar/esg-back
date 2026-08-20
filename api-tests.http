@@ -237,8 +237,8 @@ Authorization: Bearer {{token}}
 ### GET - Listar todos los proyectos
 GET {{baseUrl}}/v1/projects?page=1&limit=10
 
-### GET - Buscar proyectos por codigo o descripcion
-GET {{baseUrl}}/v1/projects?search=SG&page=1&limit=10
+### GET - Buscar proyectos por descripcion, responsable, nombre del cliente o nombre de servicio
+GET {{baseUrl}}/v1/projects?search=Implementacion&page=1&limit=10
 
 ### GET - Obtener proyectos de un cliente
 GET {{baseUrl}}/v1/projects?clientId=1&page=1&limit=10
@@ -251,12 +251,8 @@ GET {{baseUrl}}/v1/projects/1
 #   "success": true,
 #   "data": {
 #     "id": 1,
-#     "consecutive": 1,
-#     "abbreviation": "SG",
-#     "code": "0001-SG",
 #     "clientId": 1,
 #     "client": { "id": 1, "name": "RESPALDO VITAL S.A.S", "email": "contacto@respaldovital.com", "nit": "900123456-7" },
-#     "projectType": "Sistema de Gestion de Calidad",
 #     "serviceType": "Consultoria",
 #     "norm": "ISO 9001:2015",
 #     "status": "cotizacion",
@@ -273,16 +269,48 @@ GET {{baseUrl}}/v1/projects/1
 #         "norm": "ISO 9001:2015",
 #         "quantity": 3,
 #         "unitPrice": 2500000,
+#         "subtotal": 7500000,
+#         "discount": 0,
+#         "subtotalWithDiscount": 7500000,
+#         "iva": 1425000,
 #         "totalPrice": 7500000,
-#         "collaborator": "Camila Rodriguez"
+#         "rol": "Gerente de Proyecto",
+#         "collaborator": "Camila Rodriguez",
+#         "billingAccountNumber": "CC-001",
+#         "collaboratorUnitPrice": 2500000,
+#         "collaboratorTotalPrice": 7500000,
+#         "pretaxProfit": 1500000,
+#         "ica": 75000,
+#         "simpleTax": 375000,
+#         "netProfit": 1050000,
+#         "entryDate": "2025-02-15",
+#         "billingDate": "2025-03-15",
+#         "purchaseOrderDate": "2025-02-10",
+#         "purchaseOrderNumber": "OC-001"
 #       },
 #       {
 #         "name": "Capacitacion Virtual",
 #         "norm": "ISO 9001:2015",
 #         "quantity": 4,
 #         "unitPrice": 500000,
+#         "subtotal": 2000000,
+#         "discount": 100000,
+#         "subtotalWithDiscount": 1900000,
+#         "iva": 380000,
 #         "totalPrice": 2000000,
-#         "collaborator": "Andres Martinez"
+#         "rol": "Consultor",
+#         "collaborator": "Andres Martinez",
+#         "billingAccountNumber": "CC-002",
+#         "collaboratorUnitPrice": 500000,
+#         "collaboratorTotalPrice": 2000000,
+#         "pretaxProfit": 400000,
+#         "ica": 20000,
+#         "simpleTax": 100000,
+#         "netProfit": 280000,
+#         "entryDate": "2025-03-01",
+#         "billingDate": "2025-04-01",
+#         "purchaseOrderDate": "2025-02-25",
+#         "purchaseOrderNumber": "OC-002"
 #       }
 #     ],
 #     "createdAt": "2025-02-10T10:00:00.000Z",
@@ -297,10 +325,6 @@ Authorization: Bearer {{token}}
 
 {
   "clientId": 1,
-  "consecutive": 1,
-  "abbreviation": "SG",
-  "code": "0001-SG",
-  "projectType": "Sistema de Gestion de Calidad",
   "serviceType": "Consultoria",
   "norm": "ISO 9001:2015",
   "status": "cotizacion",
@@ -316,16 +340,48 @@ Authorization: Bearer {{token}}
       "norm": "ISO 9001:2015",
       "quantity": 3,
       "unitPrice": 2500000,
+      "subtotal": 7500000,
+      "discount": 0,
+      "subtotalWithDiscount": 7500000,
+      "iva": 1425000,
       "totalPrice": 7500000,
-      "collaborator": "Camila Rodriguez"
+      "rol": "Gerente de Proyecto",
+      "collaborator": "Camila Rodriguez",
+      "billingAccountNumber": "CC-001",
+      "collaboratorUnitPrice": 2500000,
+      "collaboratorTotalPrice": 7500000,
+      "pretaxProfit": 1500000,
+      "ica": 75000,
+      "simpleTax": 375000,
+      "netProfit": 1050000,
+      "entryDate": "2025-02-15",
+      "billingDate": "2025-03-15",
+      "purchaseOrderDate": "2025-02-10",
+      "purchaseOrderNumber": "OC-001"
     },
     {
       "name": "Capacitacion Virtual",
       "norm": "ISO 9001:2015",
       "quantity": 4,
       "unitPrice": 500000,
+      "subtotal": 2000000,
+      "discount": 100000,
+      "subtotalWithDiscount": 1900000,
+      "iva": 380000,
       "totalPrice": 2000000,
-      "collaborator": "Andres Martinez"
+      "rol": "Consultor",
+      "collaborator": "Andres Martinez",
+      "billingAccountNumber": "CC-002",
+      "collaboratorUnitPrice": 500000,
+      "collaboratorTotalPrice": 2000000,
+      "pretaxProfit": 400000,
+      "ica": 20000,
+      "simpleTax": 100000,
+      "netProfit": 280000,
+      "entryDate": "2025-03-01",
+      "billingDate": "2025-04-01",
+      "purchaseOrderDate": "2025-02-25",
+      "purchaseOrderNumber": "OC-002"
     }
   ]
 }
@@ -355,7 +411,7 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/v1/quotes?page=1&limit=10
 
 ### GET - Buscar cotizaciones por codigo o nombre de cliente
-GET {{baseUrl}}/v1/quotes?search=COT&page=1&limit=10
+GET {{baseUrl}}/v1/quotes?search=COT-2025&page=1&limit=10
 
 ### GET - Obtener cotizaciones de un cliente
 GET {{baseUrl}}/v1/quotes?clientId=1&page=1&limit=10

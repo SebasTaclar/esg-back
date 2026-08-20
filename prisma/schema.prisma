@@ -122,11 +122,7 @@ model Client {
 
 model Project {
   id           Int       @id @default(autoincrement())
-  consecutive  Int
-  abbreviation String
-  code         String
   clientId     Int       @map("client_id")
-  projectType  String?   @map("project_type")
   serviceType  String?   @map("service_type")
   norm         String?
   status       String
@@ -145,7 +141,6 @@ model Project {
 
   @@index([clientId], map: "idx_projects_client_id")
   @@index([status], map: "idx_projects_status")
-  @@index([code], map: "idx_projects_code")
   @@map("projects")
 }
 

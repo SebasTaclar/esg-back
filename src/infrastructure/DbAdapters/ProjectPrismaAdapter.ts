@@ -59,10 +59,6 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
 
   async create(data: {
     clientId: number;
-    consecutive: number;
-    abbreviation: string;
-    code: string;
-    projectType?: string;
     serviceType?: string;
     norm?: string;
     status: string;
@@ -78,10 +74,6 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
     return await this.prisma.project.create({
       data: {
         clientId: data.clientId,
-        consecutive: data.consecutive,
-        abbreviation: data.abbreviation,
-        code: data.code,
-        projectType: data.projectType || null,
         serviceType: data.serviceType || null,
         norm: data.norm || null,
         status: data.status,
@@ -101,11 +93,7 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
   async update(
     id: number,
     data: {
-      consecutive?: number;
-      abbreviation?: string;
-      code?: string;
       clientId?: number;
-      projectType?: string;
       serviceType?: string;
       norm?: string;
       status?: string;
@@ -121,11 +109,7 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
   ): Promise<Project> {
     const updateData: Record<string, unknown> = {};
 
-    if (data.consecutive !== undefined) updateData.consecutive = data.consecutive;
-    if (data.abbreviation !== undefined) updateData.abbreviation = data.abbreviation;
-    if (data.code !== undefined) updateData.code = data.code;
     if (data.clientId !== undefined) updateData.clientId = data.clientId;
-    if (data.projectType !== undefined) updateData.projectType = data.projectType;
     if (data.serviceType !== undefined) updateData.serviceType = data.serviceType;
     if (data.norm !== undefined) updateData.norm = data.norm;
     if (data.status !== undefined) updateData.status = data.status;
@@ -157,15 +141,16 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
     limit: number = 10
   ): Promise<{ projects: Project[]; total: number }> {
     const skip = (page - 1) * limit;
+    const searchFilter = { contains: query, mode: 'insensitive' as const };
 
     const [projects, total] = await Promise.all([
       this.prisma.project.findMany({
         where: {
           OR: [
-            { code: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } },
-            { responsible: { contains: query, mode: 'insensitive' } },
-            { client: { name: { contains: query, mode: 'insensitive' } } },
+            { description: searchFilter },
+            { responsible: searchFilter },
+            { client: { name: searchFilter } },
+            { services: { path: '$[*].name', string_contains: query } } as unknown as Prisma.ProjectWhereInput,
           ],
         },
         skip,
@@ -176,10 +161,10 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
       this.prisma.project.count({
         where: {
           OR: [
-            { code: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } },
-            { responsible: { contains: query, mode: 'insensitive' } },
-            { client: { name: { contains: query, mode: 'insensitive' } } },
+            { description: searchFilter },
+            { responsible: searchFilter },
+            { client: { name: searchFilter } },
+            { services: { path: '$[*].name', string_contains: query } } as unknown as Prisma.ProjectWhereInput,
           ],
         },
       }),

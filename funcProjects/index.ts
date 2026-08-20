@@ -86,7 +86,6 @@ const funcProjects = async (
 
     const errors: string[] = [];
     if (!body.clientId) errors.push('clientId is required');
-    if (!body.code) errors.push('code is required');
     if (!body.status) errors.push('status is required');
     if (!body.responsible) errors.push('responsible is required');
     if (!body.startDate) errors.push('startDate is required');
@@ -95,10 +94,6 @@ const funcProjects = async (
 
     const projectRequest: ProjectRequest = {
       clientId: body.clientId as number,
-      consecutive: body.consecutive as number,
-      abbreviation: body.abbreviation as string,
-      code: body.code as string,
-      projectType: body.projectType as string,
       serviceType: body.serviceType as string,
       norm: body.norm as string,
       status: body.status as string,
@@ -122,11 +117,7 @@ const funcProjects = async (
 
     const body = req.body as Record<string, unknown>;
     const updateRequest: UpdateProjectRequest = {
-      consecutive: body.consecutive as number,
-      abbreviation: body.abbreviation as string,
-      code: body.code as string,
       clientId: body.clientId as number,
-      projectType: body.projectType as string,
       serviceType: body.serviceType as string,
       norm: body.norm as string,
       status: body.status as string,
