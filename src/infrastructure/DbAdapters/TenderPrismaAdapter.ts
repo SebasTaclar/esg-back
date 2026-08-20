@@ -1,6 +1,7 @@
 import { getPrismaClient } from '../../config/PrismaClient';
 import { ITenderDataSource } from '../../domain/interfaces/ITenderDataSource';
 import { Tender } from '@prisma/client';
+import { TenderServiceItem } from '../../domain/entities/Tender';
 
 export class TenderPrismaAdapter implements ITenderDataSource {
   private prisma = getPrismaClient();
@@ -42,6 +43,7 @@ export class TenderPrismaAdapter implements ITenderDataSource {
     publicationDate: string;
     closingDate?: string;
     estimatedValue?: number;
+    serviceItems?: TenderServiceItem[];
     observations?: string;
   }): Promise<Tender> {
     return await this.prisma.tender.create({
@@ -56,6 +58,7 @@ export class TenderPrismaAdapter implements ITenderDataSource {
         publicationDate: new Date(data.publicationDate),
         closingDate: data.closingDate ? new Date(data.closingDate) : null,
         estimatedValue: data.estimatedValue || null,
+        serviceItems: data.serviceItems || null,
         observations: data.observations || null,
       },
     });
@@ -74,6 +77,7 @@ export class TenderPrismaAdapter implements ITenderDataSource {
       publicationDate?: string;
       closingDate?: string;
       estimatedValue?: number;
+      serviceItems?: TenderServiceItem[];
       observations?: string;
     }
   ): Promise<Tender> {
@@ -89,6 +93,7 @@ export class TenderPrismaAdapter implements ITenderDataSource {
     if (data.publicationDate !== undefined) updateData.publicationDate = new Date(data.publicationDate);
     if (data.closingDate !== undefined) updateData.closingDate = data.closingDate ? new Date(data.closingDate) : null;
     if (data.estimatedValue !== undefined) updateData.estimatedValue = data.estimatedValue;
+    if (data.serviceItems !== undefined) updateData.serviceItems = data.serviceItems;
     if (data.observations !== undefined) updateData.observations = data.observations;
 
     return await this.prisma.tender.update({

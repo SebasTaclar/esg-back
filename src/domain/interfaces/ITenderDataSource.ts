@@ -1,4 +1,5 @@
 import { Tender } from '@prisma/client';
+import { TenderServiceItem } from '../entities/Tender';
 
 export interface ITenderDataSource {
   getAll(page?: number, limit?: number): Promise<{ tenders: Tender[]; total: number }>;
@@ -14,6 +15,7 @@ export interface ITenderDataSource {
     publicationDate: string;
     closingDate?: string;
     estimatedValue?: number;
+    serviceItems?: TenderServiceItem[];
     observations?: string;
   }): Promise<Tender>;
   update(
@@ -29,6 +31,7 @@ export interface ITenderDataSource {
       publicationDate?: string;
       closingDate?: string;
       estimatedValue?: number;
+      serviceItems?: TenderServiceItem[];
       observations?: string;
     }
   ): Promise<Tender>;

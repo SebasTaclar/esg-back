@@ -1,6 +1,6 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { getTenderService } from '../src/shared/serviceProvider';
-import { TenderRequest, UpdateTenderRequest } from '../src/domain/entities/Tender';
+import { TenderRequest, UpdateTenderRequest, TenderServiceItem } from '../src/domain/entities/Tender';
 import { withApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
@@ -81,6 +81,7 @@ const funcTenders = async (
       publicationDate: body.publicationDate as string,
       closingDate: body.closingDate as string,
       estimatedValue: body.estimatedValue as number,
+      serviceItems: body.serviceItems as TenderServiceItem[],
       observations: body.observations as string,
     };
 
@@ -104,6 +105,7 @@ const funcTenders = async (
       publicationDate: body.publicationDate as string,
       closingDate: body.closingDate as string,
       estimatedValue: body.estimatedValue as number,
+      serviceItems: body.serviceItems as TenderServiceItem[],
       observations: body.observations as string,
     };
 

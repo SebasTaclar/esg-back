@@ -177,6 +177,7 @@ model Tender {
   publicationDate DateTime  @map("publication_date")
   closingDate     DateTime? @map("closing_date")
   estimatedValue  Decimal?  @map("estimated_value") @db.Decimal(12, 2)
+  serviceItems    Json?     @map("service_items")
   observations    String?
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")

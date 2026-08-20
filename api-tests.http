@@ -546,16 +546,49 @@ GET {{baseUrl}}/v1/tenders/1
 #   "success": true,
 #   "data": {
 #     "id": 1,
-#     "offerCode": "OE-LIC-001",
-#     "type": "publica",
-#     "processNumber": "SECOP-2025-00123",
-#     "clientName": "Ministerio de Ambiente",
-#     "service": "Auditoria ISO 14001",
-#     "norm": "ISO 14001:2015",
+#     "offerCode": "UMV-CMC-031-2025",
+#     "type": "Minima Cuantia",
+#     "processNumber": "UMV-CMC-031-2025",
+#     "clientName": "UNIDAD ADMINISTRATIVA ESPECIAL DE REHABILITACION Y MANTENIMIENTO VIAL",
+#     "service": "Auditoria interna presencial",
+#     "norm": "ISO IEC 17025:2017",
 #     "status": "publicada",
 #     "publicationDate": "2025-02-01T00:00:00.000Z",
 #     "closingDate": "2025-03-01T00:00:00.000Z",
-#     "estimatedValue": 50000000,
+#     "estimatedValue": 4864412,
+#     "serviceItems": [
+#       {
+#         "name": "Auditoria interna presencial",
+#         "norm": "ISO IEC 17025:2017",
+#         "quantity": 0.5,
+#         "unitPrice": 1362581,
+#         "subtotal": 681290,
+#         "discount": 0,
+#         "subtotalWithDiscount": 681290,
+#         "iva": 129445,
+#         "totalPrice": 810735,
+#         "rol": "Auditor Lider",
+#         "collaborator": "Juan Perez",
+#         "billingAccountNumber": "CC-001",
+#         "collaboratorUnitPrice": 750000,
+#         "collaboratorTotalPrice": 375000,
+#         "travelExpenses": 0,
+#         "pretaxProfit": 306290,
+#         "ica": 7835,
+#         "simpleTax": 49734,
+#         "netProfit": 248721,
+#         "stamps": 0,
+#         "withholdingTax": 0,
+#         "otherFees": 0,
+#         "bonds": 0,
+#         "finalProfit": 248721,
+#         "entryDate": "2025-03",
+#         "billingDate": "2025-04",
+#         "purchaseOrderDate": "2025-02-25",
+#         "purchaseOrderNumber": "OC-001",
+#         "observations": ""
+#       }
+#     ],
 #     "observations": "Licitacion publica para auditoria ambiental",
 #     "createdAt": "2025-02-01T10:00:00.000Z",
 #     "updatedAt": "2025-02-01T10:00:00.000Z"
@@ -568,17 +601,99 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "offerCode": "OE-LIC-001",
-  "type": "publica",
-  "processNumber": "SECOP-2025-00123",
-  "clientName": "Ministerio de Ambiente",
-  "service": "Auditoria ISO 14001",
-  "norm": "ISO 14001:2015",
+  "offerCode": "UMV-CMC-031-2025",
+  "type": "Minima Cuantia",
+  "processNumber": "UMV-CMC-031-2025",
+  "clientName": "UNIDAD ADMINISTRATIVA ESPECIAL DE REHABILITACION Y MANTENIMIENTO VIAL",
+  "service": "Auditoria interna presencial",
+  "norm": "ISO IEC 17025:2017",
   "status": "publicada",
   "publicationDate": "2025-02-01",
   "closingDate": "2025-03-01",
-  "estimatedValue": 50000000,
+  "estimatedValue": 4864412,
+  "serviceItems": [
+    {
+      "name": "Auditoria interna presencial",
+      "norm": "ISO IEC 17025:2017",
+      "quantity": 0.5,
+      "unitPrice": 1362581,
+      "subtotal": 681290,
+      "discount": 0,
+      "subtotalWithDiscount": 681290,
+      "iva": 129445,
+      "totalPrice": 810735,
+      "rol": "Auditor Lider",
+      "collaborator": "Juan Perez",
+      "billingAccountNumber": "CC-001",
+      "collaboratorUnitPrice": 750000,
+      "collaboratorTotalPrice": 375000,
+      "travelExpenses": 0,
+      "pretaxProfit": 306290,
+      "ica": 7835,
+      "simpleTax": 49734,
+      "netProfit": 248721,
+      "stamps": 0,
+      "withholdingTax": 0,
+      "otherFees": 0,
+      "bonds": 0,
+      "finalProfit": 248721,
+      "entryDate": "2025-03",
+      "billingDate": "2025-04",
+      "purchaseOrderDate": "2025-02-25",
+      "purchaseOrderNumber": "OC-001",
+      "observations": ""
+    },
+    {
+      "name": "Auditoria interna presencial - Fase 2",
+      "norm": "ISO IEC 17025:2017",
+      "quantity": 2,
+      "unitPrice": 1362581,
+      "subtotal": 2725161,
+      "discount": 0,
+      "subtotalWithDiscount": 2725161,
+      "iva": 517781,
+      "totalPrice": 3242942,
+      "rol": "Auditor",
+      "collaborator": "Maria Lopez",
+      "billingAccountNumber": "CC-002",
+      "collaboratorUnitPrice": 750000,
+      "collaboratorTotalPrice": 1500000,
+      "travelExpenses": 0,
+      "pretaxProfit": 1225161,
+      "ica": 31339,
+      "simpleTax": 198937,
+      "netProfit": 994885,
+      "stamps": 0,
+      "withholdingTax": 0,
+      "otherFees": 0,
+      "bonds": 0,
+      "finalProfit": 994885,
+      "entryDate": "2025-04",
+      "billingDate": "2025-05",
+      "purchaseOrderDate": "2025-03-25",
+      "purchaseOrderNumber": "OC-002",
+      "observations": ""
+    }
+  ],
   "observations": "Licitacion publica para auditoria ambiental"
+}
+
+### POST - Crear licitacion sin serviceItems (requiere JWT)
+POST {{baseUrl}}/v1/tenders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "offerCode": "MC-025-CAM-2025",
+  "type": "Minima Cuantia",
+  "processNumber": "MC-025-CAM-2025",
+  "clientName": "CORPORACION AUTONOMA REGIONAL DEL ALTO MAGDALENA",
+  "service": "Taller teorico practico",
+  "norm": "ISO 9001:2015 - ISO 14001:2015",
+  "status": "publicada",
+  "publicationDate": "2025-02-01",
+  "estimatedValue": 7735000,
+  "observations": "Taller de capacitacion"
 }
 
 ### PATCH - Actualizar licitacion (requiere JWT)
@@ -589,6 +704,47 @@ Authorization: Bearer {{token}}
 {
   "status": "en_curso",
   "observations": "Propuesta enviada, en espera de respuesta"
+}
+
+### PATCH - Actualizar serviceItems de licitacion (requiere JWT)
+PATCH {{baseUrl}}/v1/tenders/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "serviceItems": [
+    {
+      "name": "Auditoria interna presencial - Actualizada",
+      "norm": "ISO IEC 17025:2017",
+      "quantity": 1,
+      "unitPrice": 1362581,
+      "subtotal": 1362581,
+      "discount": 0,
+      "subtotalWithDiscount": 1362581,
+      "iva": 258890,
+      "totalPrice": 1621471,
+      "rol": "Auditor Lider",
+      "collaborator": "Juan Perez",
+      "billingAccountNumber": "CC-001",
+      "collaboratorUnitPrice": 750000,
+      "collaboratorTotalPrice": 750000,
+      "travelExpenses": 0,
+      "pretaxProfit": 612581,
+      "ica": 15670,
+      "simpleTax": 99468,
+      "netProfit": 497343,
+      "stamps": 0,
+      "withholdingTax": 0,
+      "otherFees": 0,
+      "bonds": 0,
+      "finalProfit": 497343,
+      "entryDate": "2025-03",
+      "billingDate": "2025-04",
+      "purchaseOrderDate": "2025-02-25",
+      "purchaseOrderNumber": "OC-001",
+      "observations": "Fase 1 completada"
+    }
+  ]
 }
 
 ### DELETE - Eliminar licitacion (requiere JWT)
