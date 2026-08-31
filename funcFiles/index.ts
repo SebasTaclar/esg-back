@@ -127,7 +127,7 @@ const funcFiles = async (_context: Context, req: HttpRequest, log: Logger): Prom
     }
 
     try {
-      const validFolders = ['clients', 'projects', 'quotes', 'tenders'];
+      const validFolders = ['clients', 'projects', 'quotes', 'tenders', 'collaborators'];
       if (validFolders.includes(folder)) {
         const documentService = getDocumentService(log);
         const doc = await documentService.createDocument(folder, entityId, parsedData.files[0], user);
@@ -151,7 +151,7 @@ const funcFiles = async (_context: Context, req: HttpRequest, log: Logger): Prom
     log.logInfo(`Processing DELETE request for ${folder}/${entityId}/${fileKey}`);
 
     try {
-      if (folder === 'clients' || folder === 'projects' || folder === 'quotes' || folder === 'tenders') {
+      if (folder === 'clients' || folder === 'projects' || folder === 'quotes' || folder === 'tenders' || folder === 'collaborators') {
         const documentService = getDocumentService(log);
         const docId = parseInt(fileKey.split('/').pop()?.split('.')[0] || '0', 10);
         if (docId) {

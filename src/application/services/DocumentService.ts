@@ -6,6 +6,7 @@ import { IClientDataSource } from '../../domain/interfaces/IClientDataSource';
 import { IProjectDataSource } from '../../domain/interfaces/IProjectDataSource';
 import { IQuoteDataSource } from '../../domain/interfaces/IQuoteDataSource';
 import { ITenderDataSource } from '../../domain/interfaces/ITenderDataSource';
+import { ICollaboratorDataSource } from '../../domain/interfaces/ICollaboratorDataSource';
 import { UploadFile } from '../../domain/entities/StoredFile';
 import { DocumentResponse } from '../../domain/entities/Document';
 import { Document } from '@prisma/client';
@@ -15,6 +16,7 @@ const ENTITY_LABELS: Record<string, string> = {
   project: 'Project',
   quote: 'Quote',
   tender: 'Tender',
+  collaborator: 'Collaborator',
 };
 
 export class DocumentService {
@@ -25,6 +27,7 @@ export class DocumentService {
   private projectDataSource: IProjectDataSource;
   private quoteDataSource: IQuoteDataSource;
   private tenderDataSource: ITenderDataSource;
+  private collaboratorDataSource: ICollaboratorDataSource;
 
   constructor(
     logger: Logger,
@@ -33,7 +36,8 @@ export class DocumentService {
     clientDataSource: IClientDataSource,
     projectDataSource: IProjectDataSource,
     quoteDataSource: IQuoteDataSource,
-    tenderDataSource: ITenderDataSource
+    tenderDataSource: ITenderDataSource,
+    collaboratorDataSource: ICollaboratorDataSource
   ) {
     this.logger = logger;
     this.documentDataSource = documentDataSource;
@@ -42,6 +46,7 @@ export class DocumentService {
     this.projectDataSource = projectDataSource;
     this.quoteDataSource = quoteDataSource;
     this.tenderDataSource = tenderDataSource;
+    this.collaboratorDataSource = collaboratorDataSource;
   }
 
   private async validateEntityExists(entityType: string, entityId: number): Promise<void> {
@@ -65,6 +70,11 @@ export class DocumentService {
       }
       case 'tender': {
         const entity = await this.tenderDataSource.getById(entityId);
+        exists = entity !== null;
+        break;
+      }
+      case 'collaborator': {
+        const entity = await this.collaboratorDataSource.getById(entityId);
         exists = entity !== null;
         break;
       }

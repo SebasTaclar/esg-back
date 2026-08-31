@@ -57,21 +57,30 @@ const funcEvents = async (
     const body = req.body as Record<string, unknown>;
 
     const errors: string[] = [];
-    if (!body.entityType) errors.push('entityType is required');
-    if (!body.entityId) errors.push('entityId is required');
     if (!body.type) errors.push('type is required');
-    if (!body.description) errors.push('description is required');
-    if (!body.user) errors.push('user is required');
     if (!body.date) errors.push('date is required');
+    if (!body.user) errors.push('user is required');
     if (errors.length > 0) return ApiResponseBuilder.validationError(errors);
 
     const eventRequest: EventRequest = {
       entityType: body.entityType as EventRequest['entityType'],
       entityId: body.entityId as number,
+      title: body.title as string,
+      client: body.client as string,
       type: body.type as string,
+      typeOtro: body.typeOtro as string,
       description: body.description as string,
-      user: body.user as string,
       date: body.date as string,
+      endDate: body.endDate as string,
+      modalidad: body.modalidad as string,
+      modalidadOtro: body.modalidadOtro as string,
+      location: body.location as string,
+      personaContacto: body.personaContacto as string,
+      user: body.user as string,
+      userOtro: body.userOtro as string,
+      leadAuditor: body.leadAuditor as string,
+      coAuditors: body.coAuditors as string,
+      normas: body.normas as string,
     };
 
     const event = await eventService.createEvent(eventRequest);

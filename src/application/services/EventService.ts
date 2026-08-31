@@ -5,6 +5,7 @@ import { IClientDataSource } from '../../domain/interfaces/IClientDataSource';
 import { IProjectDataSource } from '../../domain/interfaces/IProjectDataSource';
 import { IQuoteDataSource } from '../../domain/interfaces/IQuoteDataSource';
 import { ITenderDataSource } from '../../domain/interfaces/ITenderDataSource';
+import { ICollaboratorDataSource } from '../../domain/interfaces/ICollaboratorDataSource';
 import { EventRequest, EventResponse } from '../../domain/entities/Event';
 import { Event } from '@prisma/client';
 
@@ -13,6 +14,7 @@ const ENTITY_LABELS: Record<string, string> = {
   project: 'Project',
   quote: 'Quote',
   tender: 'Tender',
+  collaborator: 'Collaborator',
 };
 
 function toEventResponse(event: Event): EventResponse {
@@ -20,10 +22,22 @@ function toEventResponse(event: Event): EventResponse {
     id: event.id,
     entityType: event.entityType,
     entityId: event.entityId,
+    title: event.title,
+    client: event.client,
     type: event.type,
+    typeOtro: event.typeOtro,
     description: event.description,
-    user: event.user,
     date: event.date,
+    endDate: event.endDate,
+    modalidad: event.modalidad,
+    modalidadOtro: event.modalidadOtro,
+    location: event.location,
+    personaContacto: event.personaContacto,
+    user: event.user,
+    userOtro: event.userOtro,
+    leadAuditor: event.leadAuditor,
+    coAuditors: event.coAuditors,
+    normas: event.normas,
     createdAt: event.createdAt,
   };
 }
@@ -35,6 +49,7 @@ export class EventService {
   private projectDataSource: IProjectDataSource;
   private quoteDataSource: IQuoteDataSource;
   private tenderDataSource: ITenderDataSource;
+  private collaboratorDataSource: ICollaboratorDataSource;
 
   constructor(
     logger: Logger,
@@ -42,7 +57,8 @@ export class EventService {
     clientDataSource: IClientDataSource,
     projectDataSource: IProjectDataSource,
     quoteDataSource: IQuoteDataSource,
-    tenderDataSource: ITenderDataSource
+    tenderDataSource: ITenderDataSource,
+    collaboratorDataSource: ICollaboratorDataSource
   ) {
     this.logger = logger;
     this.eventDataSource = eventDataSource;
@@ -50,6 +66,7 @@ export class EventService {
     this.projectDataSource = projectDataSource;
     this.quoteDataSource = quoteDataSource;
     this.tenderDataSource = tenderDataSource;
+    this.collaboratorDataSource = collaboratorDataSource;
   }
 
   private async validateEntityExists(entityType: string, entityId: number): Promise<void> {
@@ -73,6 +90,11 @@ export class EventService {
       }
       case 'tender': {
         const entity = await this.tenderDataSource.getById(entityId);
+        exists = entity !== null;
+        break;
+      }
+      case 'collaborator': {
+        const entity = await this.collaboratorDataSource.getById(entityId);
         exists = entity !== null;
         break;
       }
@@ -107,17 +129,31 @@ export class EventService {
   }
 
   async createEvent(request: EventRequest): Promise<EventResponse> {
-    this.logger.info(`Creating event for ${request.entityType}/${request.entityId}`);
+    this.logger.info(`Creating event for ${request.entityType || 'standalone'}/${request.entityId || 'n/a'}`);
 
-    await this.validateEntityExists(request.entityType, request.entityId);
+    if (request.entityType && request.entityId) {
+      await this.validateEntityExists(request.entityType, request.entityId);
+    }
 
     const event = await this.eventDataSource.create({
+      title: request.title,
       entityType: request.entityType,
       entityId: request.entityId,
+      client: request.client,
       type: request.type,
+      typeOtro: request.typeOtro,
       description: request.description,
-      user: request.user,
       date: request.date,
+      endDate: request.endDate,
+      modalidad: request.modalidad,
+      modalidadOtro: request.modalidadOtro,
+      location: request.location,
+      personaContacto: request.personaContacto,
+      user: request.user,
+      userOtro: request.userOtro,
+      leadAuditor: request.leadAuditor,
+      coAuditors: request.coAuditors,
+      normas: request.normas,
     });
 
     this.logger.info(`Event created with ID: ${event.id}`);

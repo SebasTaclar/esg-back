@@ -11,6 +11,7 @@ import { ProjectService } from '../application/services/ProjectService';
 import { TenderService } from '../application/services/TenderService';
 import { EventService } from '../application/services/EventService';
 import { DocumentService } from '../application/services/DocumentService';
+import { CollaboratorService } from '../application/services/CollaboratorService';
 import { PendingBalanceReminderService } from '../application/services/PendingBalanceReminderService';
 import { MercadoPagoService } from '../infrastructure/services/MercadoPagoService';
 import { EmailService } from '../infrastructure/services/EmailService';
@@ -26,6 +27,7 @@ import { ProjectPrismaAdapter } from '../infrastructure/DbAdapters/ProjectPrisma
 import { TenderPrismaAdapter } from '../infrastructure/DbAdapters/TenderPrismaAdapter';
 import { EventPrismaAdapter } from '../infrastructure/DbAdapters/EventPrismaAdapter';
 import { DocumentPrismaAdapter } from '../infrastructure/DbAdapters/DocumentPrismaAdapter';
+import { CollaboratorPrismaAdapter } from '../infrastructure/DbAdapters/CollaboratorPrismaAdapter';
 import { IUserDataSource } from '../domain/interfaces/IUserDataSource';
 import { ICategoryDataSource } from '../domain/interfaces/ICategoryDataSource';
 import { IProductDataSource } from '../domain/interfaces/IProductDataSource';
@@ -36,6 +38,7 @@ import { IProjectDataSource } from '../domain/interfaces/IProjectDataSource';
 import { ITenderDataSource } from '../domain/interfaces/ITenderDataSource';
 import { IEventDataSource } from '../domain/interfaces/IEventDataSource';
 import { IDocumentDataSource } from '../domain/interfaces/IDocumentDataSource';
+import { ICollaboratorDataSource } from '../domain/interfaces/ICollaboratorDataSource';
 import { getPrismaClient } from '../config/PrismaClient';
 
 export class ServiceProvider {
@@ -79,6 +82,10 @@ export class ServiceProvider {
 
   static getDocumentDataSource(): IDocumentDataSource {
     return new DocumentPrismaAdapter();
+  }
+
+  static getCollaboratorDataSource(): ICollaboratorDataSource {
+    return new CollaboratorPrismaAdapter();
   }
 
   static getAuthService(logger: Logger): AuthService {
@@ -141,7 +148,8 @@ export class ServiceProvider {
     const projectDataSource = this.getProjectDataSource();
     const quoteDataSource = this.getQuoteDataSource();
     const tenderDataSource = this.getTenderDataSource();
-    return new EventService(logger, eventDataSource, clientDataSource, projectDataSource, quoteDataSource, tenderDataSource);
+    const collaboratorDataSource = this.getCollaboratorDataSource();
+    return new EventService(logger, eventDataSource, clientDataSource, projectDataSource, quoteDataSource, tenderDataSource, collaboratorDataSource);
   }
 
   static getDocumentService(logger: Logger): DocumentService {
@@ -151,7 +159,13 @@ export class ServiceProvider {
     const projectDataSource = this.getProjectDataSource();
     const quoteDataSource = this.getQuoteDataSource();
     const tenderDataSource = this.getTenderDataSource();
-    return new DocumentService(logger, documentDataSource, fileStorageService, clientDataSource, projectDataSource, quoteDataSource, tenderDataSource);
+    const collaboratorDataSource = this.getCollaboratorDataSource();
+    return new DocumentService(logger, documentDataSource, fileStorageService, clientDataSource, projectDataSource, quoteDataSource, tenderDataSource, collaboratorDataSource);
+  }
+
+  static getCollaboratorService(logger: Logger): CollaboratorService {
+    const collaboratorDataSource = this.getCollaboratorDataSource();
+    return new CollaboratorService(logger, collaboratorDataSource);
   }
 
   static getEmailService(logger: Logger): EmailService {
@@ -244,6 +258,10 @@ export const getDocumentService = (logger: Logger): DocumentService => {
   return ServiceProvider.getDocumentService(logger);
 };
 
+export const getCollaboratorService = (logger: Logger): CollaboratorService => {
+  return ServiceProvider.getCollaboratorService(logger);
+};
+
 export const getUserDataSource = (): IUserDataSource => {
   return ServiceProvider.getUserDataSource();
 };
@@ -282,4 +300,8 @@ export const getEventDataSource = (): IEventDataSource => {
 
 export const getDocumentDataSource = (): IDocumentDataSource => {
   return ServiceProvider.getDocumentDataSource();
+};
+
+export const getCollaboratorDataSource = (): ICollaboratorDataSource => {
+  return ServiceProvider.getCollaboratorDataSource();
 };

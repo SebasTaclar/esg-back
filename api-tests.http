@@ -231,7 +231,162 @@ Authorization: Bearer {{token}}
 
 
 # ==========================================================
-# 3. PROJECTS
+# 3. COLLABORATORS
+# ==========================================================
+
+### GET - Listar todos los colaboradores (PUBLICO)
+GET {{baseUrl}}/v1/collaborators
+
+### GET - Listar colaboradores con paginacion
+GET {{baseUrl}}/v1/collaborators?page=1&limit=10
+
+### GET - Buscar colaboradores por nombre, area, ciudad o estudios
+GET {{baseUrl}}/v1/collaborators?search=Camila&page=1&limit=10
+
+### GET - Obtener colaborador por ID (requiere JWT)
+GET {{baseUrl}}/v1/collaborators/1
+Authorization: Bearer {{token}}
+
+# Respuesta esperada:
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "name": "Camila Rodriguez",
+#     "studies": "Ingeniera Ambiental - Universidad Nacional",
+#     "mainArea": "Gestion Ambiental",
+#     "city": "Bogota D.C.",
+#     "phone": "300 123 4567",
+#     "email": "camila.rodriguez@ejemplo.com",
+#     "status": "available",
+#     "competencies": [
+#       { "area": "ISO 14001", "norm": "ISO 14001:2015", "description": "Auditor Lider certificada" },
+#       { "area": "ISO 9001", "norm": "ISO 9001:2015", "description": "Auditor interno" }
+#     ],
+#     "documents": [
+#       { "name": "HV Camila Rodriguez.pdf", "type": "hoja_de_vida", "status": "approved" },
+#       { "name": "Certificado ISO 14001.pdf", "type": "certificado", "status": "approved" }
+#     ],
+#     "createdAt": "2025-02-10T10:00:00.000Z",
+#     "updatedAt": "2025-02-10T10:00:00.000Z"
+#   }
+# }
+
+### POST - Crear colaborador (requiere JWT)
+POST {{baseUrl}}/v1/collaborators
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Camila Rodriguez",
+  "studies": "Ingeniera Ambiental - Universidad Nacional",
+  "mainArea": "Gestion Ambiental",
+  "city": "Bogota D.C.",
+  "phone": "300 123 4567",
+  "email": "camila.rodriguez@ejemplo.com",
+  "status": "available",
+  "competencies": [
+    { "area": "ISO 14001", "norm": "ISO 14001:2015", "description": "Auditor Lider certificada" },
+    { "area": "ISO 9001", "norm": "ISO 9001:2015", "description": "Auditor interno" }
+  ],
+  "documents": [
+    { "name": "HV Camila Rodriguez.pdf", "type": "hoja_de_vida", "status": "approved" },
+    { "name": "Certificado ISO 14001.pdf", "type": "certificado", "status": "approved" }
+  ]
+}
+
+# Respuesta 201:
+# {
+#   "success": true,
+#   "message": "Collaborator created successfully",
+#   "data": { "id": 1, "name": "Camila Rodriguez", ... },
+#   "timestamp": "2025-02-10T10:00:00.000Z",
+#   "statusCode": 201
+# }
+
+### POST - Crear colaborador minimo (requiere JWT)
+POST {{baseUrl}}/v1/collaborators
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Andres Martinez",
+  "studies": "Ingeniero de Sistemas - Universidad Javeriana",
+  "mainArea": "Tecnologia",
+  "city": "Medellin"
+}
+
+### POST - Crear colaborador sin campos requeridos (deberia fallar 422)
+POST {{baseUrl}}/v1/collaborators
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Test Incompleto"
+}
+
+### PATCH - Actualizar colaborador (requiere JWT)
+PATCH {{baseUrl}}/v1/collaborators/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "phone": "300 999 8888",
+  "email": "camila.nueva@ejemplo.com",
+  "status": "busy",
+  "city": "Medellin",
+  "competencies": [
+    { "area": "ISO 14001", "norm": "ISO 14001:2015", "description": "Auditor Lider certificada" },
+    { "area": "ISO 45001", "norm": "ISO 45001:2018", "description": "Auditor en capacitacion" }
+  ]
+}
+
+### DELETE - Eliminar colaborador (requiere JWT)
+DELETE {{baseUrl}}/v1/collaborators/1
+Authorization: Bearer {{token}}
+
+### POST - Subir documento a un colaborador (requiere JWT + multipart)
+POST {{baseUrl}}/v1/documents
+Content-Type: multipart/form-data
+Authorization: Bearer {{token}}
+
+--form-data
+entityType: collaborator
+entityId: 1
+type: hoja_de_vida
+file: @C:/path/to/hv-consultor.pdf
+
+### POST - Subir archivo a colaborador via funcFiles (requiere JWT + multipart)
+POST {{baseUrl}}/v1/files/collaborators/1
+Content-Type: multipart/form-data
+Authorization: Bearer {{token}}
+
+--form-data
+files: @C:/path/to/hv-consultor.pdf
+
+### GET - Obtener documentos de un colaborador
+GET {{baseUrl}}/v1/documents?entityType=collaborator&entityId=1
+
+### POST - Crear evento para un colaborador (requiere JWT)
+POST {{baseUrl}}/v1/events
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "entityType": "collaborator",
+  "entityId": 1,
+  "type": "asignacion",
+  "description": "Colaborador asignado al proyecto de implementacion ISO 9001",
+  "user": "admin@example.com",
+  "date": "2025-03-01T10:00:00Z"
+}
+
+### GET - Obtener eventos de un colaborador
+GET {{baseUrl}}/v1/events?entityType=collaborator&entityId=1
+
+
+# ==========================================================
+# 4. PROJECTS
 # ==========================================================
 
 ### GET - Listar todos los proyectos
@@ -404,7 +559,7 @@ Authorization: Bearer {{token}}
 
 
 # ==========================================================
-# 4. QUOTES (Cotizaciones)
+# 5. QUOTES (Cotizaciones)
 # ==========================================================
 
 ### GET - Listar todas las cotizaciones
@@ -529,7 +684,7 @@ Authorization: Bearer {{token}}
 
 
 # ==========================================================
-# 5. TENDERS (Licitaciones)
+# 6. TENDERS (Licitaciones)
 # ==========================================================
 
 ### GET - Listar todas las licitaciones
@@ -753,7 +908,7 @@ Authorization: Bearer {{token}}
 
 
 # ==========================================================
-# 6. EVENTS (Timeline de eventos)
+# 7. EVENTS (Timeline de eventos)
 # ==========================================================
 
 ### GET - Listar todos los eventos
@@ -765,46 +920,69 @@ GET {{baseUrl}}/v1/events?entityType=client&entityId=1
 ### GET - Obtener eventos de un proyecto
 GET {{baseUrl}}/v1/events?entityType=project&entityId=1
 
-### POST - Crear evento (requiere JWT)
+### POST - Crear evento completo (requiere JWT)
 POST {{baseUrl}}/v1/events
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
+  "title": "Reunion de arranque SG",
   "entityType": "client",
   "entityId": 1,
-  "type": "reunion",
+  "client": "RESPALDO VITAL S.A.S",
+  "type": "Reunion",
   "description": "Reunion de arranque del proyecto de implementacion SG",
-  "user": "Camila Rodriguez",
-  "date": "2025-02-15T10:00:00Z"
+  "date": "2025-02-15T10:00:00Z",
+  "endDate": "2025-02-15T12:00:00Z",
+  "modalidad": "Presencial",
+  "location": "Oficina principal - Bogota",
+  "personaContacto": "Maria Torres",
+  "user": "Camila Escobar",
+  "leadAuditor": "Camila Rodriguez",
+  "coAuditors": "Andres Martinez, Paula Salcedo",
+  "normas": "ISO 9001:2015, ISO 14001:2015"
 }
 
-### POST - Crear evento de llamada
+### POST - Crear evento minimo (solo requeridos)
 POST {{baseUrl}}/v1/events
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "entityType": "project",
-  "entityId": 1,
-  "type": "llamada",
-  "description": "Llamada de seguimiento - avance fase 1",
-  "user": "Andres Martinez",
-  "date": "2025-03-01T14:30:00Z"
+  "type": "Llamada",
+  "date": "2025-03-01T14:30:00Z",
+  "user": "Luis Eduardo Salcedo"
 }
 
-### POST - Crear evento de visita
+### POST - Crear evento con tipoOtro
 POST {{baseUrl}}/v1/events
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "entityType": "tender",
-  "entityId": 1,
-  "type": "visita",
-  "description": "Visita tecnica al sitio de auditoria",
-  "user": "Camila Rodriguez",
-  "date": "2025-03-10T09:00:00Z"
+  "title": "Capacitacion interna",
+  "type": "Otro",
+  "typeOtro": "Capacitacion ISO 45001",
+  "date": "2025-03-10T09:00:00Z",
+  "user": "Paula Salcedo",
+  "modalidad": "Virtual",
+  "description": "Capacitacion virtual para el equipo"
+}
+
+### POST - Crear evento con modalidadOtro y userOtro
+POST {{baseUrl}}/v1/events
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Visita tecnica",
+  "type": "Visita",
+  "date": "2025-03-15T08:00:00Z",
+  "user": "Otro",
+  "userOtro": "Juan Consultor Externo",
+  "modalidad": "Otro",
+  "modalidadOtro": "Hibrida con inspeccion en campo",
+  "location": "Planta industrial - Medellin"
 }
 
 ### DELETE - Eliminar evento (requiere JWT)
@@ -813,7 +991,7 @@ Authorization: Bearer {{token}}
 
 
 # ==========================================================
-# 7. DOCUMENTS (Documentos polimorficos)
+# 8. DOCUMENTS (Documentos polimorficos)
 # ==========================================================
 
 ### GET - Listar todos los documentos
@@ -902,7 +1080,7 @@ Authorization: Bearer {{token}}
 
 
 # ==========================================================
-# 8. FILES (Endpoint generico para subir archivos)
+# 9. FILES (Endpoint generico para subir archivos)
 # ==========================================================
 
 ### POST - Subir archivo a cliente via funcFiles (requiere JWT + multipart)
@@ -951,7 +1129,7 @@ Authorization: Bearer {{token}}
 
 
 # ==========================================================
-# 9. PRODUCTS (E-commerce - CRUD)
+# 10. PRODUCTS (E-commerce - CRUD)
 # ==========================================================
 
 ### GET - Obtener todos los productos (paginado)
@@ -994,7 +1172,7 @@ Authorization: Bearer {{token}}
 
 
 # ==========================================================
-# 10. CATEGORIES (E-commerce - CRUD)
+# 11. CATEGORIES (E-commerce - CRUD)
 # ==========================================================
 
 ### GET - Obtener todas las categorias
@@ -1028,7 +1206,7 @@ Authorization: Bearer {{token}}
 
 
 # ==========================================================
-# 11. PAYMENTS & ORDERS
+# 12. PAYMENTS & ORDERS
 # ==========================================================
 
 ### Crear Pago - Wompi
@@ -1064,7 +1242,7 @@ GET {{baseUrl}}/v1/purchases?page=1&limit=10
 
 
 # ==========================================================
-# 12. WEBHOOKS (Automáticos)
+# 13. WEBHOOKS (Automáticos)
 # ==========================================================
 
 ### Webhook Wompi
@@ -1095,7 +1273,7 @@ Content-Type: application/json
 
 
 # ==========================================================
-# 13. UTILITIES
+# 14. UTILITIES
 # ==========================================================
 
 ### Reenviar Email
@@ -1116,6 +1294,7 @@ Content-Type: application/json
 #   - GET /v1/health/db
 #   - POST /v1/login
 #   - GET /v1/clients (listado)
+#   - GET /v1/collaborators (listado)
 #   - GET /v1/quotes (listado)
 #   - GET /v1/projects (listado)
 #   - GET /v1/tenders (listado)
@@ -1128,6 +1307,7 @@ Content-Type: application/json
 #   - POST /v1/user/create
 #   - POST, PATCH, DELETE /v1/clients/{id}
 #   - GET /v1/clients/{id} (individual)
+#   - GET, POST, PATCH, DELETE /v1/collaborators/{id}
 #   - POST, PATCH, DELETE /v1/projects/{id}
 #   - POST, PATCH, DELETE /v1/quotes/{id}
 #   - POST, PATCH, DELETE /v1/tenders/{id}
@@ -1152,4 +1332,4 @@ Content-Type: application/json
 #   presentacion, hoja_de_vida, soportes_estudio
 #
 # ENTIDADES para documents/events:
-#   client, project, quote, tender
+#   client, project, quote, tender, collaborator

@@ -188,14 +188,26 @@ model Tender {
 }
 
 model Event {
-  id          Int      @id @default(autoincrement())
-  entityType  String   @map("entity_type")
-  entityId    Int      @map("entity_id")
-  type        String
-  description String
-  user        String
-  date        DateTime
-  createdAt   DateTime @default(now()) @map("created_at")
+  id              Int       @id @default(autoincrement())
+  title           String?                                  @map("title")
+  entityType      String    @map("entity_type")
+  entityId        Int       @map("entity_id")
+  client          String?
+  type            String
+  typeOtro        String?   @map("type_otro")
+  date            DateTime
+  endDate         DateTime? @map("end_date")
+  modalidad       String?
+  modalidadOtro   String?   @map("modalidad_otro")
+  location        String?
+  personaContacto String?   @map("persona_contacto")
+  user            String
+  userOtro        String?   @map("user_otro")
+  leadAuditor     String?   @map("lead_auditor")
+  coAuditors      String?   @map("co_auditors")
+  normas          String?
+  description     String?
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   @@index([entityType, entityId], map: "idx_events_entity")
   @@index([date], map: "idx_events_date")
@@ -232,4 +244,21 @@ model base_clientes_esg {
   Norma                        String?
 
   @@ignore
+}
+
+model Collaborator {
+  id           Int      @id @default(autoincrement())
+  name         String
+  studies      String
+  mainArea     String   @map("main_area")
+  city         String
+  phone        String?
+  email        String?
+  status       String   @default("available")
+  competencies Json?
+  documents    Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("collaborators")
 }

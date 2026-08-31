@@ -36,21 +36,45 @@ export class EventPrismaAdapter implements IEventDataSource {
   }
 
   async create(data: {
+    title?: string;
     entityType: string;
     entityId: number;
+    client?: string;
     type: string;
-    description: string;
-    user: string;
+    typeOtro?: string;
+    description?: string;
     date: string;
+    endDate?: string;
+    modalidad?: string;
+    modalidadOtro?: string;
+    location?: string;
+    personaContacto?: string;
+    user: string;
+    userOtro?: string;
+    leadAuditor?: string;
+    coAuditors?: string;
+    normas?: string;
   }): Promise<Event> {
     return await this.prisma.event.create({
       data: {
+        title: data.title,
         entityType: data.entityType,
         entityId: data.entityId,
+        client: data.client,
         type: data.type,
+        typeOtro: data.typeOtro,
         description: data.description,
-        user: data.user,
         date: new Date(data.date),
+        endDate: data.endDate ? new Date(data.endDate) : null,
+        modalidad: data.modalidad,
+        modalidadOtro: data.modalidadOtro,
+        location: data.location,
+        personaContacto: data.personaContacto,
+        user: data.user,
+        userOtro: data.userOtro,
+        leadAuditor: data.leadAuditor,
+        coAuditors: data.coAuditors,
+        normas: data.normas,
       },
     });
   }

@@ -1,21 +1,45 @@
-export type EntityType = 'client' | 'project' | 'quote' | 'tender';
+export type EntityType = 'client' | 'project' | 'quote' | 'tender' | 'collaborator';
 
 export type EventRequest = {
   entityType: EntityType;
   entityId: number;
+  title?: string;
+  client?: string;
   type: string;
-  description: string;
-  user: string;
+  typeOtro?: string;
+  description?: string;
   date: string;
+  endDate?: string;
+  modalidad?: string;
+  modalidadOtro?: string;
+  location?: string;
+  personaContacto?: string;
+  user: string;
+  userOtro?: string;
+  leadAuditor?: string;
+  coAuditors?: string;
+  normas?: string;
 };
 
 export type EventResponse = {
   id: number;
   entityType: string;
   entityId: number;
+  title?: string | null;
+  client?: string | null;
   type: string;
-  description: string;
-  user: string;
+  typeOtro?: string | null;
+  description?: string | null;
   date: Date;
+  endDate?: Date | null;
+  modalidad?: string | null;
+  modalidadOtro?: string | null;
+  location?: string | null;
+  personaContacto?: string | null;
+  user: string;
+  userOtro?: string | null;
+  leadAuditor?: string | null;
+  coAuditors?: string | null;
+  normas?: string | null;
   createdAt: Date;
 };
