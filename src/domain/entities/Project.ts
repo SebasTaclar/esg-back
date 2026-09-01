@@ -38,6 +38,7 @@ export type ProjectRequest = {
   offer?: string;
   totalCost?: number;
   services?: ProjectServiceItem[];
+  isVisible?: boolean;
 };
 
 export type ProjectResponse = {
@@ -60,6 +61,7 @@ export type ProjectResponse = {
   offer?: string | null;
   totalCost?: Decimal | number | null;
   services?: ProjectServiceItem[] | null;
+  isVisible: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -77,4 +79,5 @@ export type UpdateProjectRequest = {
   offer?: string;
   totalCost?: number;
   services?: ProjectServiceItem[];
+  isVisible?: boolean;
 };

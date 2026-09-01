@@ -98,6 +98,7 @@ export class DocumentService {
       url: this.fileStorage.buildPublicUrl(doc.url),
       size: doc.size,
       user: doc.user,
+      isVisible: doc.isVisible,
       createdAt: doc.createdAt,
     };
   }
@@ -154,6 +155,7 @@ export class DocumentService {
       url: storedFile.key,
       size: file.buffer.length,
       user,
+      isVisible: false,
     });
 
     this.logger.info(`Document created with ID: ${doc.id}`);

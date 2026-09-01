@@ -22,6 +22,8 @@ export interface ClientRequest {
   showResources?: boolean;
   contacts?: Contact[];
   resources?: Resource[];
+  userId?: number;
+  isVisible?: boolean;
 }
 
 export interface ClientResponse {
@@ -41,8 +43,10 @@ export interface ClientResponse {
   isProspect: boolean;
   observations?: string | null;
   showResources: boolean;
+  isVisible: boolean;
   contacts?: Contact[] | null;
   resources?: Resource[] | null;
+  userId?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,6 +69,7 @@ export interface UpdateClientRequest {
   showResources?: boolean;
   contacts?: Contact[];
   resources?: Resource[];
+  isVisible?: boolean;
 }
 
 function toClientResponse(client: Client): ClientResponse {
@@ -85,8 +90,10 @@ function toClientResponse(client: Client): ClientResponse {
     isProspect: client.isProspect,
     observations: client.observations,
     showResources: client.showResources,
+    isVisible: client.isVisible,
     contacts: (client.contacts as Contact[]) || null,
     resources: (client.resources as Resource[]) || null,
+    userId: client.userId,
     createdAt: client.createdAt,
     updatedAt: client.updatedAt,
   };
@@ -127,6 +134,8 @@ export class ClientService {
       showResources: data.showResources,
       contacts: data.contacts,
       resources: data.resources,
+      userId: data.userId,
+      isVisible: data.isVisible,
     });
 
     this.logger.info(`Client created with ID: ${client.id}`);
@@ -162,6 +171,13 @@ export class ClientService {
 
     const client = await this.clientDataSource.getByEmail(email);
     return client ? toClientResponse(client) : null;
+  }
+
+  async getClientsByUserId(userId: number): Promise<ClientResponse[]> {
+    this.logger.info(`Fetching clients for user ID: ${userId}`);
+
+    const clients = await this.clientDataSource.getByUserId(userId);
+    return clients.map(toClientResponse);
   }
 
   async updateClient(id: number, data: UpdateClientRequest): Promise<ClientResponse> {

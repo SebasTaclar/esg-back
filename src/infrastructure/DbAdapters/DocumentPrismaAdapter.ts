@@ -49,6 +49,7 @@ export class DocumentPrismaAdapter implements IDocumentDataSource {
     url: string;
     size?: number;
     user: string;
+    isVisible?: boolean;
   }): Promise<Document> {
     return await this.prisma.document.create({
       data: {
@@ -59,6 +60,7 @@ export class DocumentPrismaAdapter implements IDocumentDataSource {
         url: data.url,
         size: data.size || null,
         user: data.user,
+        isVisible: data.isVisible ?? false,
       },
     });
   }

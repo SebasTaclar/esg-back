@@ -1,28 +1,34 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { getClientService } from '../src/shared/serviceProvider';
 import { ClientRequest, UpdateClientRequest } from '../src/application/services/ClientService';
-import { withApiHandler } from '../src/shared/apiHandler';
+import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
-import { validateAuthToken } from '../src/shared/authHelper';
+import { AuthenticatedUser } from '../src/shared/authMiddleware';
+import { isAdmin, isClient } from '../src/shared/roleMiddleware';
 
 const funcClients = async (
   _context: Context,
   req: HttpRequest,
-  logger: Logger
+  logger: Logger,
+  user: AuthenticatedUser
 ): Promise<unknown> => {
   const clientService = getClientService(logger);
   const method = req.method?.toUpperCase();
   const id = req.params.id ? parseInt(req.params.id, 10) : null;
 
   if (method === 'GET' && !id) {
-    logger.info('GET /clients - Fetching all clients');
+    logger.info('GET /clients - Fetching clients');
     const page = req.query.page ? parseInt(req.query.page as string, 10) : undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
     const search = req.query.search as string | undefined;
 
     let result;
-    if (search) {
+
+    if (isClient(user)) {
+      const userClients = await clientService.getClientsByUserId(parseInt(user.id, 10));
+      result = { clients: userClients, total: userClients.length };
+    } else if (search) {
       result = await clientService.searchClients(search, page || 1, limit || 10);
     } else if (page || limit) {
       result = await clientService.getAllClients(page || 1, limit || 10);
@@ -51,23 +57,15 @@ const funcClients = async (
     );
   }
 
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (!authHeader) {
-    return ApiResponseBuilder.error('Unauthorized: Missing authorization header', 401);
-  }
-  try {
-    validateAuthToken(authHeader);
-    logger.logInfo(`User authenticated`);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-    logger.logError(`Authentication failed: ${errorMessage}`);
-    return ApiResponseBuilder.error('Unauthorized: Invalid or expired token', 401);
-  }
-
   if (method === 'GET' && id) {
     logger.info(`GET /clients/${id} - Fetching client by ID`);
     if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid client ID');
     const client = await clientService.getClientById(id);
+
+    if (isClient(user) && client.userId !== parseInt(user.id, 10)) {
+      return ApiResponseBuilder.error('Forbidden: You can only view your own clients', 403);
+    }
+
     return ApiResponseBuilder.success(client, 'Client retrieved successfully');
   }
 
@@ -99,6 +97,7 @@ const funcClients = async (
       showResources: body.showResources !== undefined ? Boolean(body.showResources) : undefined,
       contacts: body.contacts as ClientRequest['contacts'],
       resources: body.resources as ClientRequest['resources'],
+      userId: isAdmin(user) ? (body.userId as number) : undefined,
     };
 
     const client = await clientService.createClient(clientRequest);
@@ -108,6 +107,11 @@ const funcClients = async (
   if (method === 'PATCH' && id) {
     logger.info(`PATCH /clients/${id} - Updating client`);
     if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid client ID');
+
+    const existingClient = await clientService.getClientById(id);
+    if (isClient(user) && existingClient.userId !== parseInt(user.id, 10)) {
+      return ApiResponseBuilder.error('Forbidden: You can only update your own clients', 403);
+    }
 
     const body = req.body as Record<string, unknown>;
     const updateRequest: UpdateClientRequest = {
@@ -137,6 +141,12 @@ const funcClients = async (
   if (method === 'DELETE' && id) {
     logger.info(`DELETE /clients/${id} - Deleting client`);
     if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid client ID');
+
+    const existingClient = await clientService.getClientById(id);
+    if (isClient(user) && existingClient.userId !== parseInt(user.id, 10)) {
+      return ApiResponseBuilder.error('Forbidden: You can only delete your own clients', 403);
+    }
+
     await clientService.deleteClient(id);
     return ApiResponseBuilder.success({ id }, 'Client deleted successfully');
   }
@@ -144,4 +154,4 @@ const funcClients = async (
   return ApiResponseBuilder.methodNotAllowed(`Method ${method} not allowed for this endpoint`);
 };
 
-export default withApiHandler(funcClients);
+export default withAuthenticatedApiHandler(funcClients);

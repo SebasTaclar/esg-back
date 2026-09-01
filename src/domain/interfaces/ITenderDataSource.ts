@@ -17,6 +17,7 @@ export interface ITenderDataSource {
     estimatedValue?: number;
     serviceItems?: TenderServiceItem[];
     observations?: string;
+    isVisible?: boolean;
   }): Promise<Tender>;
   update(
     id: number,
@@ -33,6 +34,7 @@ export interface ITenderDataSource {
       estimatedValue?: number;
       serviceItems?: TenderServiceItem[];
       observations?: string;
+      isVisible?: boolean;
     }
   ): Promise<Tender>;
   delete(id: number): Promise<void>;

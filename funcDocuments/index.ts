@@ -1,10 +1,11 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { getDocumentService } from '../src/shared/serviceProvider';
-import { withApiHandler } from '../src/shared/apiHandler';
+import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
-import { validateAuthToken } from '../src/shared/authHelper';
+import { AuthenticatedUser } from '../src/shared/authMiddleware';
 import { verifyToken } from '../src/shared/jwtHelper';
+import { isAdmin, isClient } from '../src/shared/roleMiddleware';
 import { UploadFile } from '../src/domain/entities/StoredFile';
 import Busboy from 'busboy';
 
@@ -86,7 +87,8 @@ function parseMultipartData(req: HttpRequest): Promise<ParsedMultipartData> {
 const funcDocuments = async (
   _context: Context,
   req: HttpRequest,
-  logger: Logger
+  logger: Logger,
+  user: AuthenticatedUser
 ): Promise<unknown> => {
   const documentService = getDocumentService(logger);
   const method = req.method?.toUpperCase();
@@ -98,13 +100,23 @@ const funcDocuments = async (
     const entityId = req.query.entityId ? parseInt(req.query.entityId as string, 10) : null;
 
     if (entityType && entityId) {
-      const documents = await documentService.getDocumentsByEntity(entityType, entityId);
+      let documents = await documentService.getDocumentsByEntity(entityType, entityId);
+
+      if (isClient(user)) {
+        documents = documents.filter(d => d.isVisible);
+      }
+
       return ApiResponseBuilder.success({ count: documents.length, documents }, 'Documents retrieved successfully');
     }
 
     const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
     const result = await documentService.getAllDocuments(page, limit);
+
+    if (isClient(user)) {
+      result.documents = result.documents.filter(d => d.isVisible);
+    }
+
     const totalPages = Math.ceil(result.total / limit);
     return ApiResponseBuilder.success(
       {
@@ -116,27 +128,15 @@ const funcDocuments = async (
     );
   }
 
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (!authHeader) {
-    return ApiResponseBuilder.error('Unauthorized: Missing authorization header', 401);
-  }
-
-  let user = 'unknown';
-  try {
-    const token = validateAuthToken(authHeader);
-    const userPayload = verifyToken(token);
-    user = userPayload.email;
-    logger.logInfo(`User authenticated: ${user}`);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-    logger.logError(`Authentication failed: ${errorMessage}`);
-    return ApiResponseBuilder.error('Unauthorized: Invalid or expired token', 401);
-  }
-
   if (method === 'GET' && id) {
     logger.info(`GET /documents/${id}`);
     if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid document ID');
     const doc = await documentService.getDocumentById(id);
+
+    if (isClient(user) && !doc.isVisible) {
+      return ApiResponseBuilder.error('Forbidden: This document is not visible', 403);
+    }
+
     return ApiResponseBuilder.success(doc, 'Document retrieved successfully');
   }
 
@@ -164,7 +164,7 @@ const funcDocuments = async (
       fields.entityType,
       parseInt(fields.entityId, 10),
       files[0],
-      user,
+      user.email,
       fields.type
     );
 
@@ -181,4 +181,4 @@ const funcDocuments = async (
   return ApiResponseBuilder.methodNotAllowed(`Method ${method} not allowed for this endpoint`);
 };
 
-export default withApiHandler(funcDocuments);
+export default withAuthenticatedApiHandler(funcDocuments);

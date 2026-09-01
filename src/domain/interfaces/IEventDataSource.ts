@@ -5,8 +5,8 @@ export interface IEventDataSource {
   getByEntity(entityType: string, entityId: number): Promise<Event[]>;
   create(data: {
     title?: string;
-    entityType: string;
-    entityId: number;
+    entityType?: string | null;
+    entityId?: number | null;
     client?: string;
     type: string;
     typeOtro?: string;
@@ -22,6 +22,7 @@ export interface IEventDataSource {
     leadAuditor?: string;
     coAuditors?: string;
     normas?: string;
+    isVisible?: boolean;
   }): Promise<Event>;
   delete(id: number): Promise<void>;
 }

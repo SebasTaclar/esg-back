@@ -14,6 +14,7 @@ export interface QuoteRequest {
   validUntil?: string;
   observations?: string;
   services: QuoteServiceType[];
+  isVisible?: boolean;
 }
 
 export interface QuoteResponse {
@@ -38,6 +39,7 @@ export interface QuoteResponse {
   validUntil?: Date | null;
   observations?: string | null;
   services: QuoteServiceType[];
+  isVisible: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +53,7 @@ export interface UpdateQuoteRequest {
   validUntil?: string;
   observations?: string;
   services?: QuoteServiceType[];
+  isVisible?: boolean;
 }
 
 export class QuoteService {
@@ -130,6 +133,7 @@ export class QuoteService {
       validUntil: request.validUntil,
       observations: request.observations,
       services: request.services,
+      isVisible: request.isVisible,
     });
 
     this.logger.info(`Quote ${quote.id} created successfully`);
@@ -176,7 +180,11 @@ export class QuoteService {
       updateData.totalAmount = request.totalAmount;
     }
 
-    const updatedQuote = await this.quoteDataSource.update(id, updateData as { services?: QuoteServiceType[]; totalAmount?: number; code?: string; clientId?: number; projectId?: number; status?: string; validUntil?: string; observations?: string });
+    if (request.isVisible !== undefined) {
+      updateData.isVisible = request.isVisible;
+    }
+
+    const updatedQuote = await this.quoteDataSource.update(id, updateData as { services?: QuoteServiceType[]; totalAmount?: number; code?: string; clientId?: number; projectId?: number; status?: string; validUntil?: string; observations?: string; isVisible?: boolean });
 
     this.logger.info(`Quote ${id} updated successfully`);
     return updatedQuote as unknown as QuoteResponse;

@@ -37,8 +37,8 @@ export class EventPrismaAdapter implements IEventDataSource {
 
   async create(data: {
     title?: string;
-    entityType: string;
-    entityId: number;
+    entityType?: string | null;
+    entityId?: number | null;
     client?: string;
     type: string;
     typeOtro?: string;
@@ -54,12 +54,13 @@ export class EventPrismaAdapter implements IEventDataSource {
     leadAuditor?: string;
     coAuditors?: string;
     normas?: string;
+    isVisible?: boolean;
   }): Promise<Event> {
     return await this.prisma.event.create({
       data: {
         title: data.title,
-        entityType: data.entityType,
-        entityId: data.entityId,
+        entityType: data.entityType ?? null,
+        entityId: data.entityId ?? null,
         client: data.client,
         type: data.type,
         typeOtro: data.typeOtro,
@@ -75,6 +76,7 @@ export class EventPrismaAdapter implements IEventDataSource {
         leadAuditor: data.leadAuditor,
         coAuditors: data.coAuditors,
         normas: data.normas,
+        isVisible: data.isVisible ?? false,
       },
     });
   }

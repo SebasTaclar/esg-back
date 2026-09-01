@@ -45,6 +45,7 @@ export type TenderRequest = {
   estimatedValue?: number;
   serviceItems?: TenderServiceItem[];
   observations?: string;
+  isVisible?: boolean;
 };
 
 export type TenderResponse = {
@@ -61,6 +62,7 @@ export type TenderResponse = {
   estimatedValue?: Decimal | number | null;
   serviceItems?: TenderServiceItem[] | null;
   observations?: string | null;
+  isVisible: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -78,4 +80,5 @@ export type UpdateTenderRequest = {
   estimatedValue?: number;
   serviceItems?: TenderServiceItem[];
   observations?: string;
+  isVisible?: boolean;
 };

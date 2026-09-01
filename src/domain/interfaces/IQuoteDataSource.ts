@@ -22,6 +22,7 @@ export interface IQuoteDataSource {
     validUntil?: string;
     observations?: string;
     services: QuoteService[];
+    isVisible?: boolean;
   }): Promise<Quote>;
   update(
     id: number,
@@ -34,6 +35,7 @@ export interface IQuoteDataSource {
       validUntil?: string;
       observations?: string;
       services?: QuoteService[];
+      isVisible?: boolean;
     }
   ): Promise<Quote>;
   delete(id: number): Promise<void>;

@@ -45,6 +45,7 @@ export class TenderPrismaAdapter implements ITenderDataSource {
     estimatedValue?: number;
     serviceItems?: TenderServiceItem[];
     observations?: string;
+    isVisible?: boolean;
   }): Promise<Tender> {
     return await this.prisma.tender.create({
       data: {
@@ -60,6 +61,7 @@ export class TenderPrismaAdapter implements ITenderDataSource {
         estimatedValue: data.estimatedValue || null,
         serviceItems: data.serviceItems || null,
         observations: data.observations || null,
+        isVisible: data.isVisible ?? false,
       },
     });
   }
@@ -79,6 +81,7 @@ export class TenderPrismaAdapter implements ITenderDataSource {
       estimatedValue?: number;
       serviceItems?: TenderServiceItem[];
       observations?: string;
+      isVisible?: boolean;
     }
   ): Promise<Tender> {
     const updateData: Record<string, unknown> = {};
@@ -95,6 +98,7 @@ export class TenderPrismaAdapter implements ITenderDataSource {
     if (data.estimatedValue !== undefined) updateData.estimatedValue = data.estimatedValue;
     if (data.serviceItems !== undefined) updateData.serviceItems = data.serviceItems;
     if (data.observations !== undefined) updateData.observations = data.observations;
+    if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
 
     return await this.prisma.tender.update({
       where: { id },

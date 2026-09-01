@@ -25,6 +25,7 @@ function toProjectResponse(project: Project): ProjectResponse {
     offer: project.offer,
     totalCost: project.totalCost,
     services: (project.services as ProjectServiceItem[]) || null,
+    isVisible: project.isVisible,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   };
@@ -100,6 +101,7 @@ export class ProjectService {
       offer: request.offer,
       totalCost: request.totalCost,
       services: request.services,
+      isVisible: request.isVisible,
     });
 
     this.logger.info(`Project created with ID: ${project.id}`);
@@ -134,6 +136,7 @@ export class ProjectService {
       offer: request.offer,
       totalCost: request.totalCost,
       services: request.services,
+      isVisible: request.isVisible,
     });
 
     this.logger.info(`Project ${id} updated successfully`);

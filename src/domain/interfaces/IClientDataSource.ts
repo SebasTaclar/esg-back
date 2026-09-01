@@ -18,6 +18,7 @@ export type Resource = {
 export interface IClientDataSource {
   getAll(page?: number, limit?: number): Promise<{ clients: Client[]; total: number }>;
   getById(id: number): Promise<Client | null>;
+  getByUserId(userId: number): Promise<Client[]>;
   getByEmail(email: string): Promise<Client | null>;
   getByNit(nit: string): Promise<Client | null>;
   create(data: {
@@ -38,6 +39,8 @@ export interface IClientDataSource {
     showResources?: boolean;
     contacts?: Contact[];
     resources?: Resource[];
+    userId?: number;
+    isVisible?: boolean;
   }): Promise<Client>;
   update(
     id: number,
@@ -59,6 +62,7 @@ export interface IClientDataSource {
       showResources?: boolean;
       contacts?: Contact[];
       resources?: Resource[];
+      isVisible?: boolean;
     }
   ): Promise<Client>;
   delete(id: number): Promise<void>;

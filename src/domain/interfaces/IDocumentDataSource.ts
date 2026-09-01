@@ -12,6 +12,7 @@ export interface IDocumentDataSource {
     url: string;
     size?: number;
     user: string;
+    isVisible?: boolean;
   }): Promise<Document>;
   delete(id: number): Promise<void>;
 }

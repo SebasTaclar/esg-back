@@ -8,6 +8,7 @@ export type DocumentRequest = {
   url: string;
   size?: number;
   user: string;
+  isVisible?: boolean;
 };
 
 export type DocumentResponse = {
@@ -19,5 +20,6 @@ export type DocumentResponse = {
   url: string;
   size?: number | null;
   user: string;
+  isVisible: boolean;
   createdAt: Date;
 };

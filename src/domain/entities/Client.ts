@@ -30,6 +30,7 @@ export type Client = {
   isProspect: boolean;
   observations?: string;
   showResources: boolean;
+  isVisible: boolean;
   contacts?: Contact[] | null;
   resources?: Resource[] | null;
   createdAt?: Date;

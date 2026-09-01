@@ -38,6 +38,7 @@ function toEventResponse(event: Event): EventResponse {
     leadAuditor: event.leadAuditor,
     coAuditors: event.coAuditors,
     normas: event.normas,
+    isVisible: event.isVisible,
     createdAt: event.createdAt,
   };
 }
@@ -154,6 +155,7 @@ export class EventService {
       leadAuditor: request.leadAuditor,
       coAuditors: request.coAuditors,
       normas: request.normas,
+      isVisible: request.isVisible,
     });
 
     this.logger.info(`Event created with ID: ${event.id}`);

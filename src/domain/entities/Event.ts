@@ -1,8 +1,8 @@
 export type EntityType = 'client' | 'project' | 'quote' | 'tender' | 'collaborator';
 
 export type EventRequest = {
-  entityType: EntityType;
-  entityId: number;
+  entityType?: EntityType;
+  entityId?: number;
   title?: string;
   client?: string;
   type: string;
@@ -19,12 +19,13 @@ export type EventRequest = {
   leadAuditor?: string;
   coAuditors?: string;
   normas?: string;
+  isVisible?: boolean;
 };
 
 export type EventResponse = {
   id: number;
-  entityType: string;
-  entityId: number;
+  entityType: string | null;
+  entityId: number | null;
   title?: string | null;
   client?: string | null;
   type: string;
@@ -41,5 +42,6 @@ export type EventResponse = {
   leadAuditor?: string | null;
   coAuditors?: string | null;
   normas?: string | null;
+  isVisible: boolean;
   createdAt: Date;
 };

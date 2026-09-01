@@ -18,6 +18,7 @@ export interface IProjectDataSource {
     offer?: string;
     totalCost?: number;
     services?: ProjectServiceItem[];
+    isVisible?: boolean;
   }): Promise<Project>;
   update(
     id: number,
@@ -34,6 +35,7 @@ export interface IProjectDataSource {
       offer?: string;
       totalCost?: number;
       services?: ProjectServiceItem[];
+      isVisible?: boolean;
     }
   ): Promise<Project>;
   delete(id: number): Promise<void>;

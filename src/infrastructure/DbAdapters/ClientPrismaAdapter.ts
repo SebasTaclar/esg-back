@@ -37,6 +37,13 @@ export class ClientPrismaAdapter implements IClientDataSource {
     });
   }
 
+  async getByUserId(userId: number): Promise<Client[]> {
+    return await this.prisma.client.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async getByNit(nit: string): Promise<Client | null> {
     return await this.prisma.client.findFirst({
       where: { nit },
@@ -61,6 +68,8 @@ export class ClientPrismaAdapter implements IClientDataSource {
     showResources?: boolean;
     contacts?: Contact[];
     resources?: Resource[];
+    userId?: number;
+    isVisible?: boolean;
   }): Promise<Client> {
     return await this.prisma.client.create({
       data: {
@@ -81,6 +90,8 @@ export class ClientPrismaAdapter implements IClientDataSource {
         showResources: data.showResources ?? false,
         contacts: (data.contacts as unknown as Prisma.InputJsonValue) || null,
         resources: (data.resources as unknown as Prisma.InputJsonValue) || null,
+        userId: data.userId || null,
+        isVisible: data.isVisible ?? false,
       },
     });
   }
@@ -105,6 +116,7 @@ export class ClientPrismaAdapter implements IClientDataSource {
       showResources?: boolean;
       contacts?: Contact[];
       resources?: Resource[];
+      isVisible?: boolean;
     }
   ): Promise<Client> {
     const updateData: Record<string, unknown> = {};
@@ -126,6 +138,7 @@ export class ClientPrismaAdapter implements IClientDataSource {
     if (data.showResources !== undefined) updateData.showResources = data.showResources;
     if (data.contacts !== undefined) updateData.contacts = data.contacts as unknown as Prisma.InputJsonValue;
     if (data.resources !== undefined) updateData.resources = data.resources as unknown as Prisma.InputJsonValue;
+    if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
 
     return await this.prisma.client.update({
       where: { id },

@@ -1,12 +1,23 @@
 @baseUrl = http://localhost:7071/api
-@token = 
+@adminToken = 
+@clientToken = 
 
 # ==========================================================
 # ESG CRM - API Tests
 # ==========================================================
 # Variables:
-#   @baseUrl  - URL base del backend (localhost:7071/api)
-#   @token    - JWT token (obtener del login)
+#   @baseUrl      - URL base del backend (localhost:7071/api)
+#   @adminToken   - JWT token de admin (obtener del login)
+#   @clientToken  - JWT token de cliente (obtener del login)
+#
+# Roles:
+#   admin  - Acceso completo, puede crear usuarios y asignar clients
+#   user   - Solo ve los clients asociados a su userId
+#
+# isVisible:
+#   Cada entidad CRM tiene campo boolean isVisible (default: false).
+#   Admin ve todos. Client solo ve registros con isVisible: true.
+#   POST/PATCH con isVisible: true/false para controlar visibilidad.
 #
 # Respuesta estandar:
 #   { "success": true, "data": {...}, "message": "...", "timestamp": "...", "statusCode": 200 }
@@ -14,268 +25,250 @@
 
 
 # ==========================================================
-# 1. HEALTH & AUTH
+# 1. SEED & SETUP
 # ==========================================================
+
+### Ejecutar seed (crear admin inicial) - Ejecutar una sola vez
+# POST {{baseUrl}}/v1/seed/admin
+# Content-Type: application/json
+# 
+# {
+#   "email": "admin@esg.com",
+#   "password": "Admin123!"
+# }
 
 ### Health Check - Verificar conexion a BD
 GET {{baseUrl}}/v1/health/db
 
-### Login - Obtener JWT
-# @name login
+
+# ==========================================================
+# 2. AUTH & USERS
+# ==========================================================
+
+### Login - Obtener JWT de Admin
+# @name loginAdmin
 POST {{baseUrl}}/v1/login
 Content-Type: application/json
 
 {
-  "email": "admin@example.com",
-  "password": "admin123"
+  "email": "admin@esg.com",
+  "password": "Admin123!"
 }
 
-### Crear Usuario
-POST {{baseUrl}}/v1/user/create
+### Login - Obtener JWT de Cliente
+# @name loginClient
+POST {{baseUrl}}/v1/login
 Content-Type: application/json
-Authorization: Bearer {{token}}
 
 {
-  "email": "newuser@example.com",
-  "password": "newuser123",
-  "name": "New User",
+  "email": "cliente@ejemplo.com",
+  "password": "cliente123"
+}
+
+### Crear Usuario (SOLO ADMIN)
+# Requiere: @adminToken del loginAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "email": "cliente@ejemplo.com",
+  "password": "cliente123",
+  "name": "Juan Perez",
   "role": "user",
   "membershipPaid": false
 }
 
-
-# ==========================================================
-# 2. CLIENTS (CRM)
-# ==========================================================
-
-### GET - Listar todos los clientes (PUBLICO)
-GET {{baseUrl}}/v1/clients
-
-### GET - Listar clientes con paginacion
-GET {{baseUrl}}/v1/clients?page=1&limit=10
-
-### GET - Buscar clientes por nombre, email o NIT
-GET {{baseUrl}}/v1/clients?search=juan&page=1&limit=10
-
-### GET - Obtener cliente por ID (requiere JWT)
-GET {{baseUrl}}/v1/clients/1
-Authorization: Bearer {{token}}
-
-# Respuesta esperada:
-# {
-#   "success": true,
-#   "data": {
-#     "id": 1,
-#     "name": "RESPALDO VITAL S.A.S",
-#     "nit": "900123456-7",
-#     "code": "0001-SG",
-#     "organizationType": "Sistema de Gestion de Calidad",
-#     "norm": "ISO 9001:2015",
-#     "city": "Bogota D.C.",
-#     "department": "Cundinamarca",
-#     "address": "Carrera 15 # 88-56, Oficina 502",
-#     "phone": "+57 601 3456789",
-#     "email": "contacto@respaldovital.com",
-#     "website": "https://respaldovital.com",
-#     "isActive": true,
-#     "isProspect": false,
-#     "observations": "Cliente corporativo desde 2021",
-#     "showResources": true,
-#     "contacts": [
-#       {
-#         "name": "Maria Torres",
-#         "position": "Gerente de Calidad",
-#         "phone": "300 123 4567",
-#         "email": "mtorres@respaldovital.com",
-#         "isPrimary": true
-#       }
-#     ],
-#     "resources": [
-#       {
-#         "name": "Logo respaldo vital",
-#         "url": "https://pub-xxx.r2.dev/clients/1-logo.png",
-#         "type": "image",
-#         "uploadedAt": "2025-02-10T10:00:00Z"
-#       },
-#       {
-#         "name": "Certificado ISO 9001",
-#         "url": "https://pub-xxx.r2.dev/clients/1-certificado.pdf",
-#         "type": "document",
-#         "uploadedAt": "2025-02-10T10:00:00Z"
-#       }
-#     ],
-#     "createdAt": "2025-01-15T10:00:00.000Z",
-#     "updatedAt": "2025-01-15T10:00:00.000Z"
-#   }
-# }
-
-### POST - Crear cliente (requiere JWT)
-POST {{baseUrl}}/v1/clients
+### Crear Usuario - Deberia fallar sin token (401)
+POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
-Authorization: Bearer {{token}}
 
 {
-  "name": "RESPALDO VITAL S.A.S",
-  "nit": "900123456-7",
-  "code": "0001-SG",
-  "organizationType": "Sistema de Gestion de Calidad",
-  "norm": "ISO 9001:2015",
-  "city": "Bogota D.C.",
-  "department": "Cundinamarca",
-  "address": "Carrera 15 # 88-56, Oficina 502",
-  "phone": "+57 601 3456789",
-  "email": "contacto@respaldovital.com",
-  "website": "https://respaldovital.com",
+  "email": "test@example.com",
+  "password": "test123",
+  "name": "Test User",
+  "role": "user"
+}
+
+### Crear Usuario - Deberia fallar con rol user (403)
+# Requiere: @clientToken del loginClient
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{clientToken}}
+
+{
+  "email": "otro@example.com",
+  "password": "otro123",
+  "name": "Otro User",
+  "role": "user"
+}
+
+
+# ==========================================================
+# 3. CLIENTS (CRM) - Con Roles
+# ==========================================================
+
+### GET - Listar clients del usuario autenticado (CLIENT solo ve los suyos)
+# Requiere: @clientToken
+GET {{baseUrl}}/v1/clients
+Authorization: Bearer {{clientToken}}
+
+### GET - Listar TODOS los clients (ADMIN ve todos)
+# Requiere: @adminToken
+GET {{baseUrl}}/v1/clients
+Authorization: Bearer {{adminToken}}
+
+### GET - Listar clients con paginacion
+# Requiere: @adminToken
+GET {{baseUrl}}/v1/clients?page=1&limit=10
+Authorization: Bearer {{adminToken}}
+
+### GET - Buscar clients por nombre, email o NIT
+# Requiere: @adminToken
+GET {{baseUrl}}/v1/clients?search=juan&page=1&limit=10
+Authorization: Bearer {{adminToken}}
+
+### GET - Obtener client por ID (ADMIN)
+# Requiere: @adminToken
+GET {{baseUrl}}/v1/clients/1
+Authorization: Bearer {{adminToken}}
+
+### GET - Obtener client por ID (CLIENT solo ve el suyo)
+# Requiere: @clientToken
+GET {{baseUrl}}/v1/clients/1
+Authorization: Bearer {{clientToken}}
+
+### GET - Obtener client ajeno - Deberia fallar (403)
+# Requiere: @clientToken
+GET {{baseUrl}}/v1/clients/999
+Authorization: Bearer {{clientToken}}
+
+### GET - Sin token - Deberia fallar (401)
+GET {{baseUrl}}/v1/clients/1
+
+### POST - Crear client (ADMIN puede asignar userId)
+# Requiere: @adminToken
+POST {{baseUrl}}/v1/clients
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Empresa Nuevo Cliente S.A.S",
+  "nit": "900111222-3",
+  "email": "info@nuevocliente.com",
+  "phone": "+57 300 555 9999",
   "isActive": true,
   "isProspect": false,
-  "observations": "Cliente corporativo desde 2021",
-  "showResources": false,
-  "contacts": [
-    {
-      "name": "Maria Torres",
-      "position": "Gerente de Calidad",
-      "phone": "300 123 4567",
-      "email": "mtorres@respaldovital.com",
-      "isPrimary": true
-    },
-    {
-      "name": "Carlos Ruiz",
-      "position": "Jefe de Operaciones",
-      "phone": "310 987 6543",
-      "email": "cruiz@respaldovital.com",
-      "isPrimary": false
-    }
-  ],
-  "resources": [
-    {
-      "name": "Logo respaldo vital",
-      "url": "https://pub-xxx.r2.dev/clients/1-logo.png",
-      "type": "image",
-      "uploadedAt": "2025-02-10T10:00:00Z"
-    },
-    {
-      "name": "Certificado ISO 9001",
-      "url": "https://pub-xxx.r2.dev/clients/1-certificado.pdf",
-      "type": "document",
-      "uploadedAt": "2025-02-10T10:00:00Z"
-    },
-    {
-      "name": "Fachada oficina principal",
-      "url": "https://pub-xxx.r2.dev/clients/1-fachada.jpg",
-      "type": "image",
-      "uploadedAt": "2025-02-10T10:00:00Z"
-    }
-  ]
+  "userId": 2,
+  "isVisible": true
 }
 
-# Respuesta 201:
-# {
-#   "success": true,
-#   "message": "Client created successfully",
-#   "data": { "id": 1, "name": "RESPALDO VITAL S.A.S", "nit": "900123456-7", ... },
-#   "timestamp": "2025-01-15T10:00:00.000Z",
-#   "statusCode": 201
-# }
-
-### POST - Crear prospecto
+### POST - Crear client (CLIENT automaticamente se asigna a si mismo)
+# Requiere: @clientToken
 POST {{baseUrl}}/v1/clients
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{clientToken}}
 
 {
-  "name": "Empresa Nueva S.A.S",
-  "nit": "900987654-3",
-  "email": "info@empresanueva.com",
-  "phone": "+57 300 555 1234",
-  "isProspect": true,
-  "observations": "Prospecto interesado en ISO 14001"
+  "name": "Mi Empresa Personal",
+  "nit": "900333444-5",
+  "email": "contacto@miempresa.com",
+  "phone": "+57 310 123 4567",
+  "isProspect": true
 }
 
-### PATCH - Actualizar cliente (requiere JWT)
+### POST - Sin token - Deberia fallar (401)
+POST {{baseUrl}}/v1/clients
+Content-Type: application/json
+
+{
+  "name": "Test Sin Auth",
+  "nit": "900999888-7",
+  "email": "test@sinauth.com"
+}
+
+### POST - Token invalido - Deberia fallar (401)
+POST {{baseUrl}}/v1/clients
+Content-Type: application/json
+Authorization: Bearer invalid-token-123
+
+{
+  "name": "Test Token Invalido",
+  "nit": "900999888-8",
+  "email": "test@tokeninvalido.com"
+}
+
+### PATCH - Asignar client a usuario (SOLO ADMIN)
+# Requiere: @adminToken
+PATCH {{baseUrl}}/v1/clients/1/assign-user
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "userId": 2
+}
+
+### PATCH - Desasignar client de usuario (SOLO ADMIN)
+# Requiere: @adminToken
+PATCH {{baseUrl}}/v1/clients/1/assign-user
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "userId": null
+}
+
+### PATCH - Asignar client - Deberia fallar con rol user (403)
+# Requiere: @clientToken
+PATCH {{baseUrl}}/v1/clients/1/assign-user
+Content-Type: application/json
+Authorization: Bearer {{clientToken}}
+
+{
+  "userId": 2
+}
+
+### PATCH - Actualizar client (CLIENT solo actualiza el suyo)
+# Requiere: @clientToken
 PATCH {{baseUrl}}/v1/clients/1
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{clientToken}}
 
 {
   "phone": "+57 601 999 8888",
-  "observations": "Actualizado - nuevo contacto asignado",
-  "showResources": true,
-  "contacts": [
-    {
-      "name": "Maria Torres",
-      "position": "Directora de Calidad",
-      "phone": "300 123 4567",
-      "email": "mtorres@respaldovital.com",
-      "isPrimary": true
-    }
-  ],
-  "resources": [
-    {
-      "name": "Logo respaldo vital",
-      "url": "https://pub-xxx.r2.dev/clients/1-logo.png",
-      "type": "image",
-      "uploadedAt": "2025-02-10T10:00:00Z"
-    },
-    {
-      "name": "Certificado ISO 9001 vigente",
-      "url": "https://pub-xxx.r2.dev/clients/1-certificado-vigente.pdf",
-      "type": "document",
-      "uploadedAt": "2025-03-15T14:30:00Z"
-    }
-  ]
+  "observations": "Actualizado por el cliente"
 }
 
-### DELETE - Eliminar cliente (requiere JWT)
-DELETE {{baseUrl}}/v1/clients/1
-Authorization: Bearer {{token}}
-
-
-# ==========================================================
-# 3. COLLABORATORS
-# ==========================================================
-
-### GET - Listar todos los colaboradores (PUBLICO)
-GET {{baseUrl}}/v1/collaborators
-
-### GET - Listar colaboradores con paginacion
-GET {{baseUrl}}/v1/collaborators?page=1&limit=10
-
-### GET - Buscar colaboradores por nombre, area, ciudad o estudios
-GET {{baseUrl}}/v1/collaborators?search=Camila&page=1&limit=10
-
-### GET - Obtener colaborador por ID (requiere JWT)
-GET {{baseUrl}}/v1/collaborators/1
-Authorization: Bearer {{token}}
-
-# Respuesta esperada:
+### PATCH - Toggle isVisible de un client (SOLO ADMIN)
+# Requiere: @adminToken
+# PATCH {{baseUrl}}/v1/clients/1
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
 # {
-#   "success": true,
-#   "data": {
-#     "id": 1,
-#     "name": "Camila Rodriguez",
-#     "studies": "Ingeniera Ambiental - Universidad Nacional",
-#     "mainArea": "Gestion Ambiental",
-#     "city": "Bogota D.C.",
-#     "phone": "300 123 4567",
-#     "email": "camila.rodriguez@ejemplo.com",
-#     "status": "available",
-#     "competencies": [
-#       { "area": "ISO 14001", "norm": "ISO 14001:2015", "description": "Auditor Lider certificada" },
-#       { "area": "ISO 9001", "norm": "ISO 9001:2015", "description": "Auditor interno" }
-#     ],
-#     "documents": [
-#       { "name": "HV Camila Rodriguez.pdf", "type": "hoja_de_vida", "status": "approved" },
-#       { "name": "Certificado ISO 14001.pdf", "type": "certificado", "status": "approved" }
-#     ],
-#     "createdAt": "2025-02-10T10:00:00.000Z",
-#     "updatedAt": "2025-02-10T10:00:00.000Z"
-#   }
+#   "isVisible": true
 # }
 
+### DELETE - Eliminar client (CLIENT solo elimina el suyo)
+# Requiere: @clientToken
+DELETE {{baseUrl}}/v1/clients/1
+Authorization: Bearer {{clientToken}}
+
+
+# ==========================================================
+# 4. COLLABORATORS
+# ==========================================================
+
+### GET - Listar todos los colaboradores (requiere JWT)
+# Requiere: @adminToken
+GET {{baseUrl}}/v1/collaborators
+Authorization: Bearer {{adminToken}}
+
 ### POST - Crear colaborador (requiere JWT)
+# Requiere: @adminToken
 POST {{baseUrl}}/v1/collaborators
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "Camila Rodriguez",
@@ -288,195 +281,44 @@ Authorization: Bearer {{token}}
   "competencies": [
     { "area": "ISO 14001", "norm": "ISO 14001:2015", "description": "Auditor Lider certificada" },
     { "area": "ISO 9001", "norm": "ISO 9001:2015", "description": "Auditor interno" }
-  ],
-  "documents": [
-    { "name": "HV Camila Rodriguez.pdf", "type": "hoja_de_vida", "status": "approved" },
-    { "name": "Certificado ISO 14001.pdf", "type": "certificado", "status": "approved" }
   ]
 }
 
-# Respuesta 201:
-# {
-#   "success": true,
-#   "message": "Collaborator created successfully",
-#   "data": { "id": 1, "name": "Camila Rodriguez", ... },
-#   "timestamp": "2025-02-10T10:00:00.000Z",
-#   "statusCode": 201
-# }
-
-### POST - Crear colaborador minimo (requiere JWT)
-POST {{baseUrl}}/v1/collaborators
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "name": "Andres Martinez",
-  "studies": "Ingeniero de Sistemas - Universidad Javeriana",
-  "mainArea": "Tecnologia",
-  "city": "Medellin"
-}
-
-### POST - Crear colaborador sin campos requeridos (deberia fallar 422)
-POST {{baseUrl}}/v1/collaborators
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "name": "Test Incompleto"
-}
-
-### PATCH - Actualizar colaborador (requiere JWT)
-PATCH {{baseUrl}}/v1/collaborators/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "phone": "300 999 8888",
-  "email": "camila.nueva@ejemplo.com",
-  "status": "busy",
-  "city": "Medellin",
-  "competencies": [
-    { "area": "ISO 14001", "norm": "ISO 14001:2015", "description": "Auditor Lider certificada" },
-    { "area": "ISO 45001", "norm": "ISO 45001:2018", "description": "Auditor en capacitacion" }
-  ]
-}
-
-### DELETE - Eliminar colaborador (requiere JWT)
-DELETE {{baseUrl}}/v1/collaborators/1
-Authorization: Bearer {{token}}
-
-### POST - Subir documento a un colaborador (requiere JWT + multipart)
-POST {{baseUrl}}/v1/documents
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
-
---form-data
-entityType: collaborator
-entityId: 1
-type: hoja_de_vida
-file: @C:/path/to/hv-consultor.pdf
-
-### POST - Subir archivo a colaborador via funcFiles (requiere JWT + multipart)
-POST {{baseUrl}}/v1/files/collaborators/1
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
-
---form-data
-files: @C:/path/to/hv-consultor.pdf
-
-### GET - Obtener documentos de un colaborador
-GET {{baseUrl}}/v1/documents?entityType=collaborator&entityId=1
-
-### POST - Crear evento para un colaborador (requiere JWT)
-POST {{baseUrl}}/v1/events
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "entityType": "collaborator",
-  "entityId": 1,
-  "type": "asignacion",
-  "description": "Colaborador asignado al proyecto de implementacion ISO 9001",
-  "user": "admin@example.com",
-  "date": "2025-03-01T10:00:00Z"
-}
-
-### GET - Obtener eventos de un colaborador
-GET {{baseUrl}}/v1/events?entityType=collaborator&entityId=1
-
 
 # ==========================================================
-# 4. PROJECTS
+# 5. PROJECTS
 # ==========================================================
 
-### GET - Listar todos los proyectos
+### GET - Listar todos los proyectos (ADMIN ve todos)
+# Requiere: @adminToken
 GET {{baseUrl}}/v1/projects?page=1&limit=10
+Authorization: Bearer {{adminToken}}
 
-### GET - Buscar proyectos por descripcion, responsable, nombre del cliente o nombre de servicio
-GET {{baseUrl}}/v1/projects?search=Implementacion&page=1&limit=10
+### GET - Listar proyectos (CLIENT solo ve visibles)
+# Requiere: @clientToken
+# GET {{baseUrl}}/v1/projects?page=1&limit=10
+# Authorization: Bearer {{clientToken}}
 
 ### GET - Obtener proyectos de un cliente
+# Requiere: @adminToken
 GET {{baseUrl}}/v1/projects?clientId=1&page=1&limit=10
+Authorization: Bearer {{adminToken}}
 
-### GET - Obtener proyecto por ID (incluye datos del cliente)
-GET {{baseUrl}}/v1/projects/1
+### GET - Obtener proyecto por ID (ADMIN)
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/projects/1
+# Authorization: Bearer {{adminToken}}
 
-# Respuesta esperada:
-# {
-#   "success": true,
-#   "data": {
-#     "id": 1,
-#     "clientId": 1,
-#     "client": { "id": 1, "name": "RESPALDO VITAL S.A.S", "email": "contacto@respaldovital.com", "nit": "900123456-7" },
-#     "serviceType": "Consultoria",
-#     "norm": "ISO 9001:2015",
-#     "status": "cotizacion",
-#     "responsible": "Camila Rodriguez",
-#     "startDate": "2025-02-15T00:00:00.000Z",
-#     "endDate": null,
-#     "description": "Implementacion sistema de gestion de calidad",
-#     "observations": "",
-#     "offer": "OE-0001",
-#     "totalCost": 9500000,
-#     "services": [
-#       {
-#         "name": "Implementacion - Fase 1",
-#         "norm": "ISO 9001:2015",
-#         "quantity": 3,
-#         "unitPrice": 2500000,
-#         "subtotal": 7500000,
-#         "discount": 0,
-#         "subtotalWithDiscount": 7500000,
-#         "iva": 1425000,
-#         "totalPrice": 7500000,
-#         "rol": "Gerente de Proyecto",
-#         "collaborator": "Camila Rodriguez",
-#         "billingAccountNumber": "CC-001",
-#         "collaboratorUnitPrice": 2500000,
-#         "collaboratorTotalPrice": 7500000,
-#         "pretaxProfit": 1500000,
-#         "ica": 75000,
-#         "simpleTax": 375000,
-#         "netProfit": 1050000,
-#         "entryDate": "2025-02-15",
-#         "billingDate": "2025-03-15",
-#         "purchaseOrderDate": "2025-02-10",
-#         "purchaseOrderNumber": "OC-001"
-#       },
-#       {
-#         "name": "Capacitacion Virtual",
-#         "norm": "ISO 9001:2015",
-#         "quantity": 4,
-#         "unitPrice": 500000,
-#         "subtotal": 2000000,
-#         "discount": 100000,
-#         "subtotalWithDiscount": 1900000,
-#         "iva": 380000,
-#         "totalPrice": 2000000,
-#         "rol": "Consultor",
-#         "collaborator": "Andres Martinez",
-#         "billingAccountNumber": "CC-002",
-#         "collaboratorUnitPrice": 500000,
-#         "collaboratorTotalPrice": 2000000,
-#         "pretaxProfit": 400000,
-#         "ica": 20000,
-#         "simpleTax": 100000,
-#         "netProfit": 280000,
-#         "entryDate": "2025-03-01",
-#         "billingDate": "2025-04-01",
-#         "purchaseOrderDate": "2025-02-25",
-#         "purchaseOrderNumber": "OC-002"
-#       }
-#     ],
-#     "createdAt": "2025-02-10T10:00:00.000Z",
-#     "updatedAt": "2025-02-10T10:00:00.000Z"
-#   }
-# }
+### GET - Obtener proyecto por ID (CLIENT solo ve visibles, 403 si no)
+# Requiere: @clientToken
+# GET {{baseUrl}}/v1/projects/1
+# Authorization: Bearer {{clientToken}}
 
 ### POST - Crear proyecto (requiere JWT)
+# Requiere: @adminToken
 POST {{baseUrl}}/v1/projects
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "clientId": 1,
@@ -486,123 +328,94 @@ Authorization: Bearer {{token}}
   "responsible": "Camila Rodriguez",
   "startDate": "2025-02-15",
   "description": "Implementacion sistema de gestion de calidad",
-  "observations": "",
-  "offer": "OE-0001",
   "totalCost": 9500000,
-  "services": [
-    {
-      "name": "Implementacion - Fase 1",
-      "norm": "ISO 9001:2015",
-      "quantity": 3,
-      "unitPrice": 2500000,
-      "subtotal": 7500000,
-      "discount": 0,
-      "subtotalWithDiscount": 7500000,
-      "iva": 1425000,
-      "totalPrice": 7500000,
-      "rol": "Gerente de Proyecto",
-      "collaborator": "Camila Rodriguez",
-      "billingAccountNumber": "CC-001",
-      "collaboratorUnitPrice": 2500000,
-      "collaboratorTotalPrice": 7500000,
-      "pretaxProfit": 1500000,
-      "ica": 75000,
-      "simpleTax": 375000,
-      "netProfit": 1050000,
-      "entryDate": "2025-02-15",
-      "billingDate": "2025-03-15",
-      "purchaseOrderDate": "2025-02-10",
-      "purchaseOrderNumber": "OC-001"
-    },
-    {
-      "name": "Capacitacion Virtual",
-      "norm": "ISO 9001:2015",
-      "quantity": 4,
-      "unitPrice": 500000,
-      "subtotal": 2000000,
-      "discount": 100000,
-      "subtotalWithDiscount": 1900000,
-      "iva": 380000,
-      "totalPrice": 2000000,
-      "rol": "Consultor",
-      "collaborator": "Andres Martinez",
-      "billingAccountNumber": "CC-002",
-      "collaboratorUnitPrice": 500000,
-      "collaboratorTotalPrice": 2000000,
-      "pretaxProfit": 400000,
-      "ica": 20000,
-      "simpleTax": 100000,
-      "netProfit": 280000,
-      "entryDate": "2025-03-01",
-      "billingDate": "2025-04-01",
-      "purchaseOrderDate": "2025-02-25",
-      "purchaseOrderNumber": "OC-002"
-    }
-  ]
+  "isVisible": false
 }
 
-### PATCH - Actualizar proyecto (requiere JWT)
-PATCH {{baseUrl}}/v1/projects/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "status": "aprobado",
-  "observations": "Proyecto aprobado por el cliente",
-  "endDate": "2025-08-15",
-  "totalCost": 10000000
-}
-
-### DELETE - Eliminar proyecto (requiere JWT)
-DELETE {{baseUrl}}/v1/projects/1
-Authorization: Bearer {{token}}
-
-
-# ==========================================================
-# 5. QUOTES (Cotizaciones)
-# ==========================================================
-
-### GET - Listar todas las cotizaciones
-GET {{baseUrl}}/v1/quotes?page=1&limit=10
-
-### GET - Buscar cotizaciones por codigo o nombre de cliente
-GET {{baseUrl}}/v1/quotes?search=COT-2025&page=1&limit=10
-
-### GET - Obtener cotizaciones de un cliente
-GET {{baseUrl}}/v1/quotes?clientId=1&page=1&limit=10
-
-### GET - Obtener cotizaciones de un proyecto
-GET {{baseUrl}}/v1/quotes?projectId=1&page=1&limit=10
-
-### GET - Obtener cotizacion por ID (incluye cliente y proyecto)
-GET {{baseUrl}}/v1/quotes/1
-
-# Respuesta esperada:
+### POST - Crear proyecto visible para clientes
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/projects
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
 # {
-#   "success": true,
-#   "data": {
-#     "id": 1,
-#     "code": "COT-2025-001",
-#     "clientId": 1,
-#     "client": { "id": 1, "name": "RESPALDO VITAL S.A.S", "email": "...", "phone": "...", "nit": "900123456-7" },
-#     "projectId": 1,
-#     "project": { "id": 1, "code": "0001-SG", "description": "Implementacion SG" },
-#     "status": "pendiente",
-#     "totalAmount": 9500000,
-#     "validUntil": "2025-03-15T00:00:00.000Z",
-#     "observations": "Cotizacion para implementacion SG fase 1 y 2",
-#     "services": [
-#       { "name": "Implementacion", "quantity": 3, "billingType": "ONETIME", "value": 2500000 }
-#     ],
-#     "createdAt": "2025-02-10T10:00:00.000Z",
-#     "updatedAt": "2025-02-10T10:00:00.000Z"
-#   }
+#   "clientId": 1,
+#   "serviceType": "Auditoria",
+#   "norm": "ISO 14001:2015",
+#   "status": "en_progreso",
+#   "responsible": "Auditor Test",
+#   "startDate": "2025-03-01",
+#   "description": "Proyecto SI visible para clientes",
+#   "totalCost": 8000000,
+#   "isVisible": true
 # }
 
+### PATCH - Toggle isVisible de un proyecto (SOLO ADMIN)
+# Requiere: @adminToken
+# PATCH {{baseUrl}}/v1/projects/1
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "isVisible": true
+# }
+
+### PATCH - Actualizar proyecto (SOLO ADMIN)
+# Requiere: @adminToken
+# PATCH {{baseUrl}}/v1/projects/1
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "status": "en_progreso",
+#   "observations": "Avance al 50%"
+# }
+
+### DELETE - Eliminar proyecto (SOLO ADMIN)
+# Requiere: @adminToken
+# DELETE {{baseUrl}}/v1/projects/1
+# Authorization: Bearer {{adminToken}}
+
+
+# ==========================================================
+# 6. QUOTES (Cotizaciones)
+# ==========================================================
+
+### GET - Listar todas las cotizaciones (ADMIN ve todas)
+# Requiere: @adminToken
+GET {{baseUrl}}/v1/quotes?page=1&limit=10
+Authorization: Bearer {{adminToken}}
+
+### GET - Listar cotizaciones (CLIENT solo ve visibles)
+# Requiere: @clientToken
+# GET {{baseUrl}}/v1/quotes?page=1&limit=10
+# Authorization: Bearer {{clientToken}}
+
+### GET - Obtener cotizacion por ID (ADMIN)
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/quotes/1
+# Authorization: Bearer {{adminToken}}
+
+### GET - Obtener cotizacion por ID (CLIENT solo ve visibles, 403 si no)
+# Requiere: @clientToken
+# GET {{baseUrl}}/v1/quotes/1
+# Authorization: Bearer {{clientToken}}
+
+### GET - Cotizaciones por clientId
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/quotes?clientId=1&page=1&limit=10
+# Authorization: Bearer {{adminToken}}
+
+### GET - Cotizaciones por projectId
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/quotes?projectId=1&page=1&limit=10
+# Authorization: Bearer {{adminToken}}
+
 ### POST - Crear cotizacion (requiere JWT)
+# Requiere: @adminToken
 POST {{baseUrl}}/v1/quotes
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "code": "COT-2025-001",
@@ -611,564 +424,322 @@ Authorization: Bearer {{token}}
   "status": "pendiente",
   "totalAmount": 9500000,
   "validUntil": "2025-03-15",
-  "observations": "Cotizacion para implementacion SG fase 1 y 2",
+  "isVisible": false,
   "services": [
     {
       "name": "Implementacion - Fase 1",
       "quantity": 3,
       "billingType": "ONETIME",
-      "description": "Implementacion del sistema de gestion",
       "value": 2500000
-    },
-    {
-      "name": "Capacitacion Virtual",
-      "quantity": 4,
-      "billingType": "ONETIME",
-      "description": "Capacitacion virtual para el equipo",
-      "value": 500000
     }
   ]
 }
 
-### POST - Crear cotizacion mensual
-POST {{baseUrl}}/v1/quotes
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "code": "COT-2025-002",
-  "clientId": 2,
-  "status": "pendiente",
-  "totalAmount": 350000,
-  "validUntil": "2025-04-01",
-  "services": [
-    {
-      "name": "CRM Cloud",
-      "quantity": 1,
-      "billingType": "MONTHLY",
-      "description": "Sistema CRM mensual",
-      "value": 300000
-    },
-    {
-      "name": "Email Marketing",
-      "quantity": 1,
-      "billingType": "MONTHLY",
-      "description": "Plataforma de email marketing",
-      "value": 50000
-    }
-  ]
-}
-
-### PATCH - Actualizar cotizacion (requiere JWT)
-PATCH {{baseUrl}}/v1/quotes/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "status": "enviada",
-  "observations": "Cotizacion enviada al cliente por email"
-}
-
-### PATCH - Aprobar cotizacion
-PATCH {{baseUrl}}/v1/quotes/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "status": "aprobada"
-}
-
-### DELETE - Eliminar cotizacion (requiere JWT)
-DELETE {{baseUrl}}/v1/quotes/1
-Authorization: Bearer {{token}}
-
-
-# ==========================================================
-# 6. TENDERS (Licitaciones)
-# ==========================================================
-
-### GET - Listar todas las licitaciones
-GET {{baseUrl}}/v1/tenders?page=1&limit=10
-
-### GET - Buscar licitaciones por cliente o servicio
-GET {{baseUrl}}/v1/tenders?search=SECOP&page=1&limit=10
-
-### GET - Obtener licitacion por ID
-GET {{baseUrl}}/v1/tenders/1
-
-# Respuesta esperada:
+### POST - Crear cotizacion visible para clientes
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/quotes
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
 # {
-#   "success": true,
-#   "data": {
-#     "id": 1,
-#     "offerCode": "UMV-CMC-031-2025",
-#     "type": "Minima Cuantia",
-#     "processNumber": "UMV-CMC-031-2025",
-#     "clientName": "UNIDAD ADMINISTRATIVA ESPECIAL DE REHABILITACION Y MANTENIMIENTO VIAL",
-#     "service": "Auditoria interna presencial",
-#     "norm": "ISO IEC 17025:2017",
-#     "status": "publicada",
-#     "publicationDate": "2025-02-01T00:00:00.000Z",
-#     "closingDate": "2025-03-01T00:00:00.000Z",
-#     "estimatedValue": 4864412,
-#     "serviceItems": [
-#       {
-#         "name": "Auditoria interna presencial",
-#         "norm": "ISO IEC 17025:2017",
-#         "quantity": 0.5,
-#         "unitPrice": 1362581,
-#         "subtotal": 681290,
-#         "discount": 0,
-#         "subtotalWithDiscount": 681290,
-#         "iva": 129445,
-#         "totalPrice": 810735,
-#         "rol": "Auditor Lider",
-#         "collaborator": "Juan Perez",
-#         "billingAccountNumber": "CC-001",
-#         "collaboratorUnitPrice": 750000,
-#         "collaboratorTotalPrice": 375000,
-#         "travelExpenses": 0,
-#         "pretaxProfit": 306290,
-#         "ica": 7835,
-#         "simpleTax": 49734,
-#         "netProfit": 248721,
-#         "stamps": 0,
-#         "withholdingTax": 0,
-#         "otherFees": 0,
-#         "bonds": 0,
-#         "finalProfit": 248721,
-#         "entryDate": "2025-03",
-#         "billingDate": "2025-04",
-#         "purchaseOrderDate": "2025-02-25",
-#         "purchaseOrderNumber": "OC-001",
-#         "observations": ""
-#       }
-#     ],
-#     "observations": "Licitacion publica para auditoria ambiental",
-#     "createdAt": "2025-02-01T10:00:00.000Z",
-#     "updatedAt": "2025-02-01T10:00:00.000Z"
-#   }
+#   "code": "COT-VIS-001",
+#   "clientId": 1,
+#   "status": "aprobada",
+#   "totalAmount": 3000000,
+#   "validUntil": "2025-06-30",
+#   "isVisible": true,
+#   "services": [
+#     {
+#       "name": "Servicio visible",
+#       "quantity": 1,
+#       "billingType": "ONETIME",
+#       "value": 3000000
+#     }
+#   ]
 # }
 
+### PATCH - Toggle isVisible de una cotizacion (SOLO ADMIN)
+# Requiere: @adminToken
+# PATCH {{baseUrl}}/v1/quotes/1
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "isVisible": true
+# }
+
+### DELETE - Eliminar cotizacion (SOLO ADMIN)
+# Requiere: @adminToken
+# DELETE {{baseUrl}}/v1/quotes/1
+# Authorization: Bearer {{adminToken}}
+
+
+# ==========================================================
+# 7. TENDERS (Licitaciones)
+# ==========================================================
+
+### GET - Listar todas las licitaciones (ADMIN ve todas)
+# Requiere: @adminToken
+GET {{baseUrl}}/v1/tenders?page=1&limit=10
+Authorization: Bearer {{adminToken}}
+
+### GET - Listar licitaciones (CLIENT solo ve visibles)
+# Requiere: @clientToken
+# GET {{baseUrl}}/v1/tenders?page=1&limit=10
+# Authorization: Bearer {{clientToken}}
+
+### GET - Obtener licitacion por ID (ADMIN)
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/tenders/1
+# Authorization: Bearer {{adminToken}}
+
+### GET - Obtener licitacion por ID (CLIENT solo ve visibles, 403 si no)
+# Requiere: @clientToken
+# GET {{baseUrl}}/v1/tenders/1
+# Authorization: Bearer {{clientToken}}
+
 ### POST - Crear licitacion (requiere JWT)
+# Requiere: @adminToken
 POST {{baseUrl}}/v1/tenders
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "offerCode": "UMV-CMC-031-2025",
   "type": "Minima Cuantia",
   "processNumber": "UMV-CMC-031-2025",
-  "clientName": "UNIDAD ADMINISTRATIVA ESPECIAL DE REHABILITACION Y MANTENIMIENTO VIAL",
+  "clientName": "UNIDAD ADMINISTRATIVA",
   "service": "Auditoria interna presencial",
-  "norm": "ISO IEC 17025:2017",
   "status": "publicada",
   "publicationDate": "2025-02-01",
-  "closingDate": "2025-03-01",
   "estimatedValue": 4864412,
-  "serviceItems": [
-    {
-      "name": "Auditoria interna presencial",
-      "norm": "ISO IEC 17025:2017",
-      "quantity": 0.5,
-      "unitPrice": 1362581,
-      "subtotal": 681290,
-      "discount": 0,
-      "subtotalWithDiscount": 681290,
-      "iva": 129445,
-      "totalPrice": 810735,
-      "rol": "Auditor Lider",
-      "collaborator": "Juan Perez",
-      "billingAccountNumber": "CC-001",
-      "collaboratorUnitPrice": 750000,
-      "collaboratorTotalPrice": 375000,
-      "travelExpenses": 0,
-      "pretaxProfit": 306290,
-      "ica": 7835,
-      "simpleTax": 49734,
-      "netProfit": 248721,
-      "stamps": 0,
-      "withholdingTax": 0,
-      "otherFees": 0,
-      "bonds": 0,
-      "finalProfit": 248721,
-      "entryDate": "2025-03",
-      "billingDate": "2025-04",
-      "purchaseOrderDate": "2025-02-25",
-      "purchaseOrderNumber": "OC-001",
-      "observations": ""
-    },
-    {
-      "name": "Auditoria interna presencial - Fase 2",
-      "norm": "ISO IEC 17025:2017",
-      "quantity": 2,
-      "unitPrice": 1362581,
-      "subtotal": 2725161,
-      "discount": 0,
-      "subtotalWithDiscount": 2725161,
-      "iva": 517781,
-      "totalPrice": 3242942,
-      "rol": "Auditor",
-      "collaborator": "Maria Lopez",
-      "billingAccountNumber": "CC-002",
-      "collaboratorUnitPrice": 750000,
-      "collaboratorTotalPrice": 1500000,
-      "travelExpenses": 0,
-      "pretaxProfit": 1225161,
-      "ica": 31339,
-      "simpleTax": 198937,
-      "netProfit": 994885,
-      "stamps": 0,
-      "withholdingTax": 0,
-      "otherFees": 0,
-      "bonds": 0,
-      "finalProfit": 994885,
-      "entryDate": "2025-04",
-      "billingDate": "2025-05",
-      "purchaseOrderDate": "2025-03-25",
-      "purchaseOrderNumber": "OC-002",
-      "observations": ""
-    }
-  ],
-  "observations": "Licitacion publica para auditoria ambiental"
+  "isVisible": false
 }
 
-### POST - Crear licitacion sin serviceItems (requiere JWT)
-POST {{baseUrl}}/v1/tenders
-Content-Type: application/json
-Authorization: Bearer {{token}}
+### POST - Crear licitacion visible para clientes
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/tenders
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "offerCode": "LIC-VIS-001",
+#   "type": "Licitacion",
+#   "clientName": "Entidad Publica",
+#   "service": "Auditoria visible",
+#   "status": "publicada",
+#   "publicationDate": "2025-03-01",
+#   "estimatedValue": 7500000,
+#   "isVisible": true
+# }
 
-{
-  "offerCode": "MC-025-CAM-2025",
-  "type": "Minima Cuantia",
-  "processNumber": "MC-025-CAM-2025",
-  "clientName": "CORPORACION AUTONOMA REGIONAL DEL ALTO MAGDALENA",
-  "service": "Taller teorico practico",
-  "norm": "ISO 9001:2015 - ISO 14001:2015",
-  "status": "publicada",
-  "publicationDate": "2025-02-01",
-  "estimatedValue": 7735000,
-  "observations": "Taller de capacitacion"
-}
+### PATCH - Toggle isVisible de una licitacion (SOLO ADMIN)
+# Requiere: @adminToken
+# PATCH {{baseUrl}}/v1/tenders/1
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "isVisible": true
+# }
 
-### PATCH - Actualizar licitacion (requiere JWT)
-PATCH {{baseUrl}}/v1/tenders/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "status": "en_curso",
-  "observations": "Propuesta enviada, en espera de respuesta"
-}
-
-### PATCH - Actualizar serviceItems de licitacion (requiere JWT)
-PATCH {{baseUrl}}/v1/tenders/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "serviceItems": [
-    {
-      "name": "Auditoria interna presencial - Actualizada",
-      "norm": "ISO IEC 17025:2017",
-      "quantity": 1,
-      "unitPrice": 1362581,
-      "subtotal": 1362581,
-      "discount": 0,
-      "subtotalWithDiscount": 1362581,
-      "iva": 258890,
-      "totalPrice": 1621471,
-      "rol": "Auditor Lider",
-      "collaborator": "Juan Perez",
-      "billingAccountNumber": "CC-001",
-      "collaboratorUnitPrice": 750000,
-      "collaboratorTotalPrice": 750000,
-      "travelExpenses": 0,
-      "pretaxProfit": 612581,
-      "ica": 15670,
-      "simpleTax": 99468,
-      "netProfit": 497343,
-      "stamps": 0,
-      "withholdingTax": 0,
-      "otherFees": 0,
-      "bonds": 0,
-      "finalProfit": 497343,
-      "entryDate": "2025-03",
-      "billingDate": "2025-04",
-      "purchaseOrderDate": "2025-02-25",
-      "purchaseOrderNumber": "OC-001",
-      "observations": "Fase 1 completada"
-    }
-  ]
-}
-
-### DELETE - Eliminar licitacion (requiere JWT)
-DELETE {{baseUrl}}/v1/tenders/1
-Authorization: Bearer {{token}}
+### DELETE - Eliminar licitacion (SOLO ADMIN)
+# Requiere: @adminToken
+# DELETE {{baseUrl}}/v1/tenders/1
+# Authorization: Bearer {{adminToken}}
 
 
 # ==========================================================
-# 7. EVENTS (Timeline de eventos)
+# 8. EVENTS (Timeline de eventos)
 # ==========================================================
 
-### GET - Listar todos los eventos
+### GET - Listar todos los eventos (ADMIN ve todos)
+# Requiere: @adminToken
 GET {{baseUrl}}/v1/events?page=1&limit=10
+Authorization: Bearer {{adminToken}}
 
-### GET - Obtener eventos de una entidad especifica
-GET {{baseUrl}}/v1/events?entityType=client&entityId=1
+### GET - Listar eventos (CLIENT solo ve visibles)
+# Requiere: @clientToken
+# GET {{baseUrl}}/v1/events?page=1&limit=10
+# Authorization: Bearer {{clientToken}}
 
-### GET - Obtener eventos de un proyecto
-GET {{baseUrl}}/v1/events?entityType=project&entityId=1
+### GET - Eventos por entityType y entityId
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/events?entityType=client&entityId=1
+# Authorization: Bearer {{adminToken}}
 
-### POST - Crear evento completo (requiere JWT)
+### POST - Crear evento asociado a entidad (requiere JWT)
+# Requiere: @adminToken
 POST {{baseUrl}}/v1/events
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "title": "Reunion de arranque SG",
   "entityType": "client",
   "entityId": 1,
-  "client": "RESPALDO VITAL S.A.S",
   "type": "Reunion",
-  "description": "Reunion de arranque del proyecto de implementacion SG",
+  "description": "Reunion de arranque del proyecto",
   "date": "2025-02-15T10:00:00Z",
-  "endDate": "2025-02-15T12:00:00Z",
-  "modalidad": "Presencial",
-  "location": "Oficina principal - Bogota",
-  "personaContacto": "Maria Torres",
-  "user": "Camila Escobar",
-  "leadAuditor": "Camila Rodriguez",
-  "coAuditors": "Andres Martinez, Paula Salcedo",
-  "normas": "ISO 9001:2015, ISO 14001:2015"
+  "user": "Camila Rodriguez",
+  "isVisible": false
 }
 
-### POST - Crear evento minimo (solo requeridos)
-POST {{baseUrl}}/v1/events
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "type": "Llamada",
-  "date": "2025-03-01T14:30:00Z",
-  "user": "Luis Eduardo Salcedo"
-}
-
-### POST - Crear evento con tipoOtro
-POST {{baseUrl}}/v1/events
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "title": "Capacitacion interna",
-  "type": "Otro",
-  "typeOtro": "Capacitacion ISO 45001",
-  "date": "2025-03-10T09:00:00Z",
-  "user": "Paula Salcedo",
-  "modalidad": "Virtual",
-  "description": "Capacitacion virtual para el equipo"
-}
-
-### POST - Crear evento con modalidadOtro y userOtro
-POST {{baseUrl}}/v1/events
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "title": "Visita tecnica",
-  "type": "Visita",
-  "date": "2025-03-15T08:00:00Z",
-  "user": "Otro",
-  "userOtro": "Juan Consultor Externo",
-  "modalidad": "Otro",
-  "modalidadOtro": "Hibrida con inspeccion en campo",
-  "location": "Planta industrial - Medellin"
-}
-
-### DELETE - Eliminar evento (requiere JWT)
-DELETE {{baseUrl}}/v1/events/1
-Authorization: Bearer {{token}}
-
-
-# ==========================================================
-# 8. DOCUMENTS (Documentos polimorficos)
-# ==========================================================
-
-### GET - Listar todos los documentos
-GET {{baseUrl}}/v1/documents?page=1&limit=10
-
-### GET - Obtener documentos de un cliente
-GET {{baseUrl}}/v1/documents?entityType=client&entityId=1
-
-### GET - Obtener documentos de un proyecto
-GET {{baseUrl}}/v1/documents?entityType=project&entityId=1
-
-### GET - Obtener documentos de una cotizacion
-GET {{baseUrl}}/v1/documents?entityType=quote&entityId=1
-
-### GET - Obtener documentos de una licitacion
-GET {{baseUrl}}/v1/documents?entityType=tender&entityId=1
-
-# Respuesta esperada:
+### POST - Crear evento standalone (sin asociacion a entidad)
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/events
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
 # {
-#   "success": true,
-#   "data": {
-#     "count": 2,
-#     "documents": [
-#       {
-#         "id": 1,
-#         "entityType": "client",
-#         "entityId": 1,
-#         "name": "contrato-social.pdf",
-#         "type": "contrato",
-#         "url": "https://pub-xxx.r2.dev/clients/1-a1b2c3.pdf",
-#         "size": 245000,
-#         "user": "admin@example.com",
-#         "createdAt": "2025-02-10T10:00:00.000Z"
-#       }
-#     ]
-#   }
+#   "title": "Capacitacion interna",
+#   "type": "Capacitacion",
+#   "description": "Capacitacion en normativa ISO",
+#   "date": "2025-03-20T14:00:00Z",
+#   "user": "Auditor Test",
+#   "isVisible": true
 # }
 
-### POST - Subir documento a un cliente (requiere JWT + multipart)
-POST {{baseUrl}}/v1/documents
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
+### POST - Crear evento visible para clientes
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/events
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "title": "Reunion visible para cliente",
+#   "entityType": "client",
+#   "entityId": 1,
+#   "type": "Reunion",
+#   "description": "Evento que el cliente puede ver",
+#   "date": "2025-03-15T10:00:00Z",
+#   "user": "Auditor Test",
+#   "isVisible": true
+# }
 
---form-data
-entityType: client
-entityId: 1
-type: contrato
-file: @C:/path/to/contrato-social.pdf
+### POST - Crear evento solo entityType sin entityId - Deberia fallar (422)
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/events
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "title": "Evento mal formado",
+#   "entityType": "client",
+#   "type": "Reunion",
+#   "date": "2025-03-15T10:00:00Z",
+#   "user": "Auditor Test"
+# }
 
-### POST - Subir cotizacion PDF a un proyecto (requiere JWT + multipart)
-POST {{baseUrl}}/v1/documents
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
+### POST - Crear evento solo entityId sin entityType - Deberia fallar (422)
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/events
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "title": "Evento mal formado",
+#   "entityId": 1,
+#   "type": "Reunion",
+#   "date": "2025-03-15T10:00:00Z",
+#   "user": "Auditor Test"
+# }
 
---form-data
-entityType: project
-entityId: 1
-type: cotizacion
-file: @C:/path/to/cotizacion-0001-SG.pdf
+### POST - Crear evento sin type - Deberia fallar (422)
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/events
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "title": "Evento sin type",
+#   "date": "2025-03-15T10:00:00Z",
+#   "user": "Auditor Test"
+# }
 
-### POST - Subir informe a una licitacion (requiere JWT + multipart)
-POST {{baseUrl}}/v1/documents
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
+### POST - Crear evento sin date - Deberia fallar (422)
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/events
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "title": "Evento sin date",
+#   "type": "Reunion",
+#   "user": "Auditor Test"
+# }
 
---form-data
-entityType: tender
-entityId: 1
-type: informe
-file: @C:/path/to/informe-auditoria.pdf
+### POST - Crear evento sin user - Deberia fallar (422)
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/events
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "title": "Evento sin user",
+#   "type": "Reunion",
+#   "date": "2025-03-15T10:00:00Z"
+# }
 
-### POST - Subir hoja de vida a un cliente (requiere JWT + multipart)
-POST {{baseUrl}}/v1/documents
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
-
---form-data
-entityType: client
-entityId: 1
-type: hoja_de_vida
-file: @C:/path/to/hv-consultor.pdf
-
-### DELETE - Eliminar documento (requiere JWT)
-DELETE {{baseUrl}}/v1/documents/1
-Authorization: Bearer {{token}}
+### DELETE - Eliminar evento (SOLO ADMIN)
+# Requiere: @adminToken
+# DELETE {{baseUrl}}/v1/events/1
+# Authorization: Bearer {{adminToken}}
 
 
 # ==========================================================
-# 9. FILES (Endpoint generico para subir archivos)
+# 9. DOCUMENTS (Documentos polimorficos)
 # ==========================================================
 
-### POST - Subir archivo a cliente via funcFiles (requiere JWT + multipart)
-POST {{baseUrl}}/v1/files/clients/1
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
+### GET - Obtener documentos de un cliente (ADMIN ve todos)
+# Requiere: @adminToken
+GET {{baseUrl}}/v1/documents?entityType=client&entityId=1
+Authorization: Bearer {{adminToken}}
 
---form-data
-files: @C:/path/to/documento.pdf
+### GET - Obtener documentos de un cliente (CLIENT solo ve visibles)
+# Requiere: @clientToken
+# GET {{baseUrl}}/v1/documents?entityType=client&entityId=1
+# Authorization: Bearer {{clientToken}}
 
-### POST - Subir archivo a proyecto via funcFiles
-POST {{baseUrl}}/v1/files/projects/1
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
+### GET - Obtener documento por ID (ADMIN)
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/documents/1
+# Authorization: Bearer {{adminToken}}
 
---form-data
-files: @C:/path/to/archivo-proyecto.pdf
+### GET - Obtener documento por ID (CLIENT solo ve visibles, 403 si no)
+# Requiere: @clientToken
+# GET {{baseUrl}}/v1/documents/1
+# Authorization: Bearer {{clientToken}}
 
-### POST - Subir archivo a cotizacion via funcFiles
-POST {{baseUrl}}/v1/files/quotes/1
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
-
---form-data
-files: @C:/path/to/cotizacion.pdf
-
-### POST - Subir archivo a licitacion via funcFiles
-POST {{baseUrl}}/v1/files/tenders/1
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
-
---form-data
-files: @C:/path/to/propuesta.pdf
-
-### POST - Subir archivo generico (sin entidad)
-POST {{baseUrl}}/v1/files/test/0
-Content-Type: multipart/form-data
-Authorization: Bearer {{token}}
-
---form-data
-files: @C:/path/to/test-image.jpg
-
-### DELETE - Eliminar archivo generico
-DELETE {{baseUrl}}/v1/files/test/0/test/uuid-archivo.jpg
-Authorization: Bearer {{token}}
+### GET - Listar todos los documentos (requiere JWT)
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/documents?page=1&limit=10
+# Authorization: Bearer {{adminToken}}
 
 
 # ==========================================================
 # 10. PRODUCTS (E-commerce - CRUD)
 # ==========================================================
 
-### GET - Obtener todos los productos (paginado)
+### GET - Obtener todos los productos
+# Requiere: @adminToken
 GET {{baseUrl}}/v1/products?page=1&limit=10
-
-### GET - Obtener producto por ID
-GET {{baseUrl}}/v1/products/1
+Authorization: Bearer {{adminToken}}
 
 ### POST - Crear producto (requiere JWT)
+# Requiere: @adminToken
 POST {{baseUrl}}/v1/products
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "iPhone 15",
   "description": "Ultimo modelo de Apple",
   "price": 1200000,
-  "originalPrice": 1500000,
   "images": ["https://example.com/iphone1.jpg"],
   "categoryId": 1,
-  "status": "available",
-  "colors": ["Negro", "Blanco", "Azul"],
-  "isShowcase": true,
-  "showcaseImage": "https://example.com/showcase.jpg"
+  "status": "available"
 }
-
-### PATCH - Actualizar producto (requiere JWT)
-PATCH {{baseUrl}}/v1/products/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "name": "iPhone 15 Pro",
-  "price": 1400000
-}
-
-### DELETE - Eliminar producto (requiere JWT)
-DELETE {{baseUrl}}/v1/products/1
-Authorization: Bearer {{token}}
 
 
 # ==========================================================
@@ -1176,160 +747,73 @@ Authorization: Bearer {{token}}
 # ==========================================================
 
 ### GET - Obtener todas las categorias
+# Requiere: @adminToken
 GET {{baseUrl}}/v1/categories
-
-### GET - Obtener categoria por ID
-GET {{baseUrl}}/v1/categories/1
+Authorization: Bearer {{adminToken}}
 
 ### POST - Crear categoria (requiere JWT)
+# Requiere: @adminToken
 POST {{baseUrl}}/v1/categories
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "Electronica",
   "description": "Productos electronicos en general"
 }
 
-### PATCH - Actualizar categoria (requiere JWT)
-PATCH {{baseUrl}}/v1/categories/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "name": "Electronica Premium"
-}
-
-### DELETE - Eliminar categoria (requiere JWT)
-DELETE {{baseUrl}}/v1/categories/1
-Authorization: Bearer {{token}}
-
 
 # ==========================================================
 # 12. PAYMENTS & ORDERS
 # ==========================================================
 
-### Crear Pago - Wompi
-POST {{baseUrl}}/v1/payment/create
-Content-Type: application/json
-
-{
-  "buyerEmail": "cliente@ejemplo.com",
-  "buyerName": "Juan Perez",
-  "buyerIdentificationNumber": "12345678",
-  "buyerContactNumber": "+573001234567",
-  "shippingAddress": "Calle 123 #45-67, Bogota",
-  "items": [
-    { "productId": 1, "quantity": 2, "selectedColor": "Azul" },
-    { "productId": 3, "quantity": 1, "selectedColor": "Rojo" }
-  ]
-}
-
-### Obtener Pago por ID
-GET {{baseUrl}}/v1/payment/1
-
-### Obtener Todos los Pagos
-GET {{baseUrl}}/v1/payments?page=1&limit=10
-
-### Obtener Orden por ID
-GET {{baseUrl}}/v1/order/1
-
-### Obtener Todas las Ordenes
-GET {{baseUrl}}/v1/orders?page=1&limit=10
-
 ### Obtener Purchases
+# Requiere: @adminToken
 GET {{baseUrl}}/v1/purchases?page=1&limit=10
-
-
-# ==========================================================
-# 13. WEBHOOKS (Automáticos)
-# ==========================================================
-
-### Webhook Wompi
-POST {{baseUrl}}/v1/webhook/wompi
-Content-Type: application/json
-
-{
-  "event": "transaction.completed",
-  "data": {
-    "transaction": {
-      "id": "txn_123456",
-      "reference": "ref_payment_123",
-      "status": "APPROVED",
-      "amount_in_cents": 50000
-    }
-  }
-}
-
-### Webhook MercadoPago
-POST {{baseUrl}}/v1/webhook/mercadopago
-Content-Type: application/json
-
-{
-  "id": "12345678",
-  "topic": "payment",
-  "resource": "/v1/payments/12345678"
-}
-
-
-# ==========================================================
-# 14. UTILITIES
-# ==========================================================
-
-### Reenviar Email
-POST {{baseUrl}}/v1/purchase/resend-email
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "userId": 1
-}
+Authorization: Bearer {{adminToken}}
 
 
 # ==========================================================
 # NOTAS
 # ==========================================================
 #
-# ENDPOINTS PUBLICOS (sin JWT):
-#   - GET /v1/health/db
-#   - POST /v1/login
-#   - GET /v1/clients (listado)
-#   - GET /v1/collaborators (listado)
-#   - GET /v1/quotes (listado)
-#   - GET /v1/projects (listado)
-#   - GET /v1/tenders (listado)
-#   - GET /v1/events (listado)
-#   - GET /v1/documents (listado)
-#   - POST /v1/payment/create
-#   - Webhooks
+# FLUJO DE USO:
+#   1. Ejecutar seed para crear admin@esg.com (una sola vez)
+#   2. Login como admin -> copiar token en @adminToken
+#   3. Crear usuarios cliente con POST /v1/user/create
+#   4. Asociar clients a usuarios con PATCH /v1/clients/{id}/assign-user
+#   5. Login como cliente -> copiar token en @clientToken
+#   6. El cliente solo ve sus clients y registros con isVisible: true
 #
-# ENDPOINTS PROTEGIDOS (requieren JWT):
-#   - POST /v1/user/create
-#   - POST, PATCH, DELETE /v1/clients/{id}
-#   - GET /v1/clients/{id} (individual)
-#   - GET, POST, PATCH, DELETE /v1/collaborators/{id}
-#   - POST, PATCH, DELETE /v1/projects/{id}
-#   - POST, PATCH, DELETE /v1/quotes/{id}
-#   - POST, PATCH, DELETE /v1/tenders/{id}
-#   - POST, DELETE /v1/events/{id}
-#   - POST, DELETE /v1/documents/{id}
-#   - POST, DELETE /v1/files/*
-#   - CRUD de Products y Categories
+# ENDPOINTS PROTEGIDOS POR ROL:
+#   POST /v1/user/create                -> Solo admin
+#   PATCH /v1/clients/{id}/assign-user  -> Solo admin
+#   GET/POST/PATCH/DELETE /v1/clients    -> Admin ve todo, user solo ve los suyos
+#   GET /v1/projects, /v1/quotes, /v1/tenders, /v1/events, /v1/documents
+#     -> Requieren JWT, clientes solo ven registros con isVisible: true
+#
+# ENDPOINTS PUBLICOS:
+#   POST /v1/login
+#   GET /v1/health/db
+#
+# SISTEMA isVisible:
+#   Cada entidad CRM tiene campo boolean isVisible (default: false).
+#   - Admin puede crear/actualizar con isVisible en el body
+#   - Client solo ve registros con isVisible: true
+#   - Al crear un registro, se puede enviar isVisible: true/false
+#
+# EVENTS - entityType y entityId:
+#   - Ambos enviados: valida que la entidad exista
+#   - Ambos null: evento standalone, sin asociacion
+#   - Solo uno: error 422 "entityId is required when entityType is provided"
 #
 # RESPUESTA ESTANDAR:
 #   { "success": true, "data": {...}, "message": "...", "timestamp": "...", "statusCode": 200 }
 #
-# ERROR:
-#   { "success": false, "message": "...", "timestamp": "...", "statusCode": 4xx/5xx }
+# ERRORES:
+#   401 - No autenticado / token invalido
+#   403 - Sin permisos (rol insuficiente o registro no visible)
+#   404 - Recurso no encontrado
+#   422 - Validacion fallida
 #
-# DOCUMENTOS - Flujo:
-#   1. POST /v1/documents (multipart: entityType, entityId, type, file)
-#   2. GET /v1/documents?entityType=client&entityId=1
-#   3. DELETE /v1/documents/{id}
-#
-# DOCUMENTOS - Tipos validos:
-#   contrato, cotizacion, informe, certificado, acta,
-#   presentacion, hoja_de_vida, soportes_estudio
-#
-# ENTIDADES para documents/events:
-#   client, project, quote, tender, collaborator
+# ==========================================================

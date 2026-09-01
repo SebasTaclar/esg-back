@@ -1,15 +1,17 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { getEventService } from '../src/shared/serviceProvider';
 import { EventRequest } from '../src/domain/entities/Event';
-import { withApiHandler } from '../src/shared/apiHandler';
+import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
-import { validateAuthToken } from '../src/shared/authHelper';
+import { AuthenticatedUser } from '../src/shared/authMiddleware';
+import { isAdmin, isClient } from '../src/shared/roleMiddleware';
 
 const funcEvents = async (
   _context: Context,
   req: HttpRequest,
-  logger: Logger
+  logger: Logger,
+  user: AuthenticatedUser
 ): Promise<unknown> => {
   const eventService = getEventService(logger);
   const method = req.method?.toUpperCase();
@@ -19,7 +21,12 @@ const funcEvents = async (
 
   if (method === 'GET' && !id && entityType && entityId) {
     logger.info(`GET /events?entityType=${entityType}&entityId=${entityId}`);
-    const events = await eventService.getEventsByEntity(entityType, entityId);
+    let events = await eventService.getEventsByEntity(entityType, entityId);
+
+    if (isClient(user)) {
+      events = events.filter(e => e.isVisible);
+    }
+
     return ApiResponseBuilder.success({ count: events.length, events }, 'Events retrieved successfully');
   }
 
@@ -29,6 +36,11 @@ const funcEvents = async (
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
 
     const result = await eventService.getAllEvents(page, limit);
+
+    if (isClient(user)) {
+      result.events = result.events.filter(e => e.isVisible);
+    }
+
     const totalPages = Math.ceil(result.total / limit);
     return ApiResponseBuilder.success(
       {
@@ -40,18 +52,6 @@ const funcEvents = async (
     );
   }
 
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (!authHeader) {
-    return ApiResponseBuilder.error('Unauthorized: Missing authorization header', 401);
-  }
-  try {
-    validateAuthToken(authHeader);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-    logger.logError(`Authentication failed: ${errorMessage}`);
-    return ApiResponseBuilder.error('Unauthorized: Invalid or expired token', 401);
-  }
-
   if (method === 'POST') {
     logger.info('POST /events - Creating new event');
     const body = req.body as Record<string, unknown>;
@@ -60,11 +60,22 @@ const funcEvents = async (
     if (!body.type) errors.push('type is required');
     if (!body.date) errors.push('date is required');
     if (!body.user) errors.push('user is required');
+
+    const hasEntityType = body.entityType !== undefined && body.entityType !== null;
+    const hasEntityId = body.entityId !== undefined && body.entityId !== null;
+
+    if (hasEntityType && !hasEntityId) {
+      errors.push('entityId is required when entityType is provided');
+    }
+    if (hasEntityId && !hasEntityType) {
+      errors.push('entityType is required when entityId is provided');
+    }
+
     if (errors.length > 0) return ApiResponseBuilder.validationError(errors);
 
     const eventRequest: EventRequest = {
       entityType: body.entityType as EventRequest['entityType'],
-      entityId: body.entityId as number,
+      entityId: body.entityId as number | undefined,
       title: body.title as string,
       client: body.client as string,
       type: body.type as string,
@@ -81,6 +92,7 @@ const funcEvents = async (
       leadAuditor: body.leadAuditor as string,
       coAuditors: body.coAuditors as string,
       normas: body.normas as string,
+      isVisible: body.isVisible as boolean,
     };
 
     const event = await eventService.createEvent(eventRequest);
@@ -97,4 +109,4 @@ const funcEvents = async (
   return ApiResponseBuilder.methodNotAllowed(`Method ${method} not allowed for this endpoint`);
 };
 
-export default withApiHandler(funcEvents);
+export default withAuthenticatedApiHandler(funcEvents);

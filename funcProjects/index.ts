@@ -1,15 +1,17 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { getProjectService } from '../src/shared/serviceProvider';
 import { ProjectRequest, UpdateProjectRequest } from '../src/domain/entities/Project';
-import { withApiHandler } from '../src/shared/apiHandler';
+import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
-import { validateAuthToken } from '../src/shared/authHelper';
+import { AuthenticatedUser } from '../src/shared/authMiddleware';
+import { isAdmin, isClient } from '../src/shared/roleMiddleware';
 
 const funcProjects = async (
   _context: Context,
   req: HttpRequest,
-  logger: Logger
+  logger: Logger,
+  user: AuthenticatedUser
 ): Promise<unknown> => {
   const projectService = getProjectService(logger);
   const method = req.method?.toUpperCase();
@@ -27,6 +29,10 @@ const funcProjects = async (
       result = await projectService.searchProjects(search, page, limit);
     } else {
       result = await projectService.getAllProjects(page, limit);
+    }
+
+    if (isClient(user)) {
+      result.projects = result.projects.filter(p => p.isVisible);
     }
 
     const totalPages = Math.ceil(result.total / limit);
@@ -50,6 +56,11 @@ const funcProjects = async (
     }
 
     const result = await projectService.getProjectsByClientId(clientId, page, limit);
+
+    if (isClient(user)) {
+      result.projects = result.projects.filter(p => p.isVisible);
+    }
+
     const totalPages = Math.ceil(result.total / limit);
     return ApiResponseBuilder.success(
       {
@@ -65,19 +76,12 @@ const funcProjects = async (
     logger.info(`GET /projects/${id}`);
     if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid project ID');
     const project = await projectService.getProjectById(id);
-    return ApiResponseBuilder.success(project, 'Project retrieved successfully');
-  }
 
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (!authHeader) {
-    return ApiResponseBuilder.error('Unauthorized: Missing authorization header', 401);
-  }
-  try {
-    validateAuthToken(authHeader);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-    logger.logError(`Authentication failed: ${errorMessage}`);
-    return ApiResponseBuilder.error('Unauthorized: Invalid or expired token', 401);
+    if (isClient(user) && !project.isVisible) {
+      return ApiResponseBuilder.error('Forbidden: This project is not visible', 403);
+    }
+
+    return ApiResponseBuilder.success(project, 'Project retrieved successfully');
   }
 
   if (method === 'POST') {
@@ -105,6 +109,7 @@ const funcProjects = async (
       offer: body.offer as string,
       totalCost: body.totalCost as number,
       services: body.services as ProjectRequest['services'],
+      isVisible: body.isVisible as boolean,
     };
 
     const project = await projectService.createProject(projectRequest);
@@ -129,6 +134,7 @@ const funcProjects = async (
       offer: body.offer as string,
       totalCost: body.totalCost as number,
       services: body.services as UpdateProjectRequest['services'],
+      isVisible: body.isVisible as boolean,
     };
 
     const project = await projectService.updateProject(id, updateRequest);
@@ -145,4 +151,4 @@ const funcProjects = async (
   return ApiResponseBuilder.methodNotAllowed(`Method ${method} not allowed for this endpoint`);
 };
 
-export default withApiHandler(funcProjects);
+export default withAuthenticatedApiHandler(funcProjects);

@@ -70,6 +70,7 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
     offer?: string;
     totalCost?: number;
     services?: ProjectServiceItem[];
+    isVisible?: boolean;
   }): Promise<Project> {
     return await this.prisma.project.create({
       data: {
@@ -85,6 +86,7 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
         offer: data.offer || null,
         totalCost: data.totalCost || null,
         services: (data.services as unknown as Prisma.InputJsonValue) || null,
+        isVisible: data.isVisible ?? false,
       },
       include: { client: true },
     });
@@ -105,6 +107,7 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
       offer?: string;
       totalCost?: number;
       services?: ProjectServiceItem[];
+      isVisible?: boolean;
     }
   ): Promise<Project> {
     const updateData: Record<string, unknown> = {};
@@ -121,6 +124,7 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
     if (data.offer !== undefined) updateData.offer = data.offer;
     if (data.totalCost !== undefined) updateData.totalCost = data.totalCost;
     if (data.services !== undefined) updateData.services = data.services as unknown as Prisma.InputJsonValue;
+    if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
 
     return await this.prisma.project.update({
       where: { id },

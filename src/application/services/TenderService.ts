@@ -20,6 +20,7 @@ function toTenderResponse(tender: Tender): TenderResponse {
     estimatedValue: tender.estimatedValue,
     serviceItems: tender.serviceItems as TenderServiceItem[] | null,
     observations: tender.observations,
+    isVisible: tender.isVisible,
     createdAt: tender.createdAt,
     updatedAt: tender.updatedAt,
   };
@@ -74,6 +75,7 @@ export class TenderService {
       estimatedValue: request.estimatedValue,
       serviceItems: request.serviceItems,
       observations: request.observations,
+      isVisible: request.isVisible,
     });
 
     this.logger.info(`Tender created with ID: ${tender.id}`);
@@ -101,6 +103,7 @@ export class TenderService {
       estimatedValue: request.estimatedValue,
       serviceItems: request.serviceItems,
       observations: request.observations,
+      isVisible: request.isVisible,
     });
 
     this.logger.info(`Tender ${id} updated successfully`);

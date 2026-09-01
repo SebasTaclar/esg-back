@@ -1,15 +1,17 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { getTenderService } from '../src/shared/serviceProvider';
 import { TenderRequest, UpdateTenderRequest, TenderServiceItem } from '../src/domain/entities/Tender';
-import { withApiHandler } from '../src/shared/apiHandler';
+import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
-import { validateAuthToken } from '../src/shared/authHelper';
+import { AuthenticatedUser } from '../src/shared/authMiddleware';
+import { isAdmin, isClient } from '../src/shared/roleMiddleware';
 
 const funcTenders = async (
   _context: Context,
   req: HttpRequest,
-  logger: Logger
+  logger: Logger,
+  user: AuthenticatedUser
 ): Promise<unknown> => {
   const tenderService = getTenderService(logger);
   const method = req.method?.toUpperCase();
@@ -28,6 +30,10 @@ const funcTenders = async (
       result = await tenderService.getAllTenders(page, limit);
     }
 
+    if (isClient(user)) {
+      result.tenders = result.tenders.filter(t => t.isVisible);
+    }
+
     const totalPages = Math.ceil(result.total / limit);
     return ApiResponseBuilder.success(
       {
@@ -43,19 +49,12 @@ const funcTenders = async (
     logger.info(`GET /tenders/${id}`);
     if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid tender ID');
     const tender = await tenderService.getTenderById(id);
-    return ApiResponseBuilder.success(tender, 'Tender retrieved successfully');
-  }
 
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (!authHeader) {
-    return ApiResponseBuilder.error('Unauthorized: Missing authorization header', 401);
-  }
-  try {
-    validateAuthToken(authHeader);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-    logger.logError(`Authentication failed: ${errorMessage}`);
-    return ApiResponseBuilder.error('Unauthorized: Invalid or expired token', 401);
+    if (isClient(user) && !tender.isVisible) {
+      return ApiResponseBuilder.error('Forbidden: This tender is not visible', 403);
+    }
+
+    return ApiResponseBuilder.success(tender, 'Tender retrieved successfully');
   }
 
   if (method === 'POST') {
@@ -83,6 +82,7 @@ const funcTenders = async (
       estimatedValue: body.estimatedValue as number,
       serviceItems: body.serviceItems as TenderServiceItem[],
       observations: body.observations as string,
+      isVisible: body.isVisible as boolean,
     };
 
     const tender = await tenderService.createTender(tenderRequest);
@@ -107,6 +107,7 @@ const funcTenders = async (
       estimatedValue: body.estimatedValue as number,
       serviceItems: body.serviceItems as TenderServiceItem[],
       observations: body.observations as string,
+      isVisible: body.isVisible as boolean,
     };
 
     const tender = await tenderService.updateTender(id, updateRequest);
@@ -123,4 +124,4 @@ const funcTenders = async (
   return ApiResponseBuilder.methodNotAllowed(`Method ${method} not allowed for this endpoint`);
 };
 
-export default withApiHandler(funcTenders);
+export default withAuthenticatedApiHandler(funcTenders);

@@ -1,15 +1,17 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { getQuoteService } from '../src/shared/serviceProvider';
 import { QuoteRequest, UpdateQuoteRequest } from '../src/application/services/QuoteService';
-import { withApiHandler } from '../src/shared/apiHandler';
+import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
-import { validateAuthToken } from '../src/shared/authHelper';
+import { AuthenticatedUser } from '../src/shared/authMiddleware';
+import { isAdmin, isClient } from '../src/shared/roleMiddleware';
 
 const funcQuotes = async (
   _context: Context,
   req: HttpRequest,
-  logger: Logger
+  logger: Logger,
+  user: AuthenticatedUser
 ): Promise<unknown> => {
   const quoteService = getQuoteService(logger);
   const method = req.method?.toUpperCase();
@@ -28,6 +30,10 @@ const funcQuotes = async (
       result = await quoteService.searchQuotes(search, page, limit);
     } else {
       result = await quoteService.getAllQuotes(page, limit);
+    }
+
+    if (isClient(user)) {
+      result.quotes = result.quotes.filter(q => q.isVisible);
     }
 
     const totalPages = Math.ceil(result.total / limit);
@@ -49,6 +55,11 @@ const funcQuotes = async (
     if (isNaN(clientId)) return ApiResponseBuilder.badRequest('Invalid client ID');
 
     const result = await quoteService.getQuotesByClientId(clientId, page, limit);
+
+    if (isClient(user)) {
+      result.quotes = result.quotes.filter(q => q.isVisible);
+    }
+
     const totalPages = Math.ceil(result.total / limit);
     return ApiResponseBuilder.success(
       {
@@ -68,6 +79,11 @@ const funcQuotes = async (
     if (isNaN(projectId)) return ApiResponseBuilder.badRequest('Invalid project ID');
 
     const result = await quoteService.getQuotesByProjectId(projectId, page, limit);
+
+    if (isClient(user)) {
+      result.quotes = result.quotes.filter(q => q.isVisible);
+    }
+
     const totalPages = Math.ceil(result.total / limit);
     return ApiResponseBuilder.success(
       {
@@ -83,19 +99,12 @@ const funcQuotes = async (
     logger.info(`GET /quotes/${id}`);
     if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid quote ID');
     const quote = await quoteService.getQuoteById(id);
-    return ApiResponseBuilder.success(quote, 'Quote retrieved successfully');
-  }
 
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (!authHeader) {
-    return ApiResponseBuilder.error('Unauthorized: Missing authorization header', 401);
-  }
-  try {
-    validateAuthToken(authHeader);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-    logger.logError(`Authentication failed: ${errorMessage}`);
-    return ApiResponseBuilder.error('Unauthorized: Invalid or expired token', 401);
+    if (isClient(user) && !quote.isVisible) {
+      return ApiResponseBuilder.error('Forbidden: This quote is not visible', 403);
+    }
+
+    return ApiResponseBuilder.success(quote, 'Quote retrieved successfully');
   }
 
   if (method === 'POST') {
@@ -128,6 +137,7 @@ const funcQuotes = async (
       validUntil: body.validUntil as string,
       observations: body.observations as string,
       services: body.services as QuoteRequest['services'],
+      isVisible: body.isVisible as boolean,
     };
 
     const quote = await quoteService.createQuote(quoteRequest);
@@ -148,6 +158,7 @@ const funcQuotes = async (
       validUntil: body.validUntil as string,
       observations: body.observations as string,
       services: body.services as UpdateQuoteRequest['services'],
+      isVisible: body.isVisible as boolean,
     };
 
     const quote = await quoteService.updateQuote(id, updateRequest);
@@ -164,4 +175,4 @@ const funcQuotes = async (
   return ApiResponseBuilder.methodNotAllowed(`Method ${method} not allowed for this endpoint`);
 };
 
-export default withApiHandler(funcQuotes);
+export default withAuthenticatedApiHandler(funcQuotes);

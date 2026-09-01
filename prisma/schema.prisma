@@ -17,6 +17,7 @@ model User {
   membershipPaid Boolean  @default(false) @map("membership_paid")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
+  clients        Client[]
 
   @@map("users")
 }
@@ -106,17 +107,22 @@ model Client {
   isProspect       Boolean   @default(false) @map("is_prospect")
   observations     String?
   showResources    Boolean   @default(false) @map("show_resources")
+  isVisible        Boolean   @default(false) @map("is_visible")
   contacts         Json?
   resources        Json?
+  userId           Int?      @map("user_id")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
   projects         Project[]
   quotes           Quote[]
+  user             User?     @relation(fields: [userId], references: [id])
 
   @@index([email], map: "idx_clients_email")
   @@index([nit], map: "idx_clients_nit")
   @@index([isActive], map: "idx_clients_is_active")
   @@index([isProspect], map: "idx_clients_is_prospect")
+  @@index([userId], map: "idx_clients_user_id")
+  @@index([isVisible], map: "idx_clients_is_visible")
   @@map("clients")
 }
 
@@ -134,6 +140,7 @@ model Project {
   offer        String?
   totalCost    Decimal?  @map("total_cost") @db.Decimal(12, 2)
   services     Json?
+  isVisible    Boolean   @default(false) @map("is_visible")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   client       Client    @relation(fields: [clientId], references: [id])
@@ -141,6 +148,7 @@ model Project {
 
   @@index([clientId], map: "idx_projects_client_id")
   @@index([status], map: "idx_projects_status")
+  @@index([isVisible], map: "idx_projects_is_visible")
   @@map("projects")
 }
 
@@ -154,6 +162,7 @@ model Quote {
   validUntil   DateTime? @map("valid_until")
   observations String?
   services     Json
+  isVisible    Boolean   @default(false) @map("is_visible")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   client       Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
@@ -162,6 +171,7 @@ model Quote {
   @@index([clientId], map: "idx_quotes_client_id")
   @@index([projectId], map: "idx_quotes_project_id")
   @@index([status], map: "idx_quotes_status")
+  @@index([isVisible], map: "idx_quotes_is_visible")
   @@map("quotes")
 }
 
@@ -179,19 +189,21 @@ model Tender {
   estimatedValue  Decimal?  @map("estimated_value") @db.Decimal(12, 2)
   serviceItems    Json?     @map("service_items")
   observations    String?
+  isVisible       Boolean   @default(false) @map("is_visible")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@index([status], map: "idx_tenders_status")
   @@index([type], map: "idx_tenders_type")
+  @@index([isVisible], map: "idx_tenders_is_visible")
   @@map("tenders")
 }
 
 model Event {
   id              Int       @id @default(autoincrement())
   title           String?                                  @map("title")
-  entityType      String    @map("entity_type")
-  entityId        Int       @map("entity_id")
+  entityType      String?                                 @map("entity_type")
+  entityId        Int?                                    @map("entity_id")
   client          String?
   type            String
   typeOtro        String?   @map("type_otro")
@@ -207,10 +219,12 @@ model Event {
   coAuditors      String?   @map("co_auditors")
   normas          String?
   description     String?
+  isVisible       Boolean   @default(false) @map("is_visible")
   createdAt       DateTime  @default(now()) @map("created_at")
 
   @@index([entityType, entityId], map: "idx_events_entity")
   @@index([date], map: "idx_events_date")
+  @@index([isVisible], map: "idx_events_is_visible")
   @@map("events")
 }
 
@@ -223,9 +237,11 @@ model Document {
   url        String
   size       Int?
   user       String
+  isVisible  Boolean  @default(false) @map("is_visible")
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@index([entityType, entityId], map: "idx_documents_entity")
+  @@index([isVisible], map: "idx_documents_is_visible")
   @@map("documents")
 }
 
