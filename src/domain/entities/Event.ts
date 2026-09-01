@@ -22,6 +22,28 @@ export type EventRequest = {
   isVisible?: boolean;
 };
 
+export type UpdateEventRequest = {
+  entityType?: EntityType | null;
+  entityId?: number | null;
+  title?: string;
+  client?: string;
+  type?: string;
+  typeOtro?: string;
+  description?: string;
+  date?: string;
+  endDate?: string;
+  modalidad?: string;
+  modalidadOtro?: string;
+  location?: string;
+  personaContacto?: string;
+  user?: string;
+  userOtro?: string;
+  leadAuditor?: string;
+  coAuditors?: string;
+  normas?: string;
+  isVisible?: boolean;
+};
+
 export type EventResponse = {
   id: number;
   entityType: string | null;

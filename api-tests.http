@@ -681,6 +681,28 @@ Authorization: Bearer {{adminToken}}
 #   "date": "2025-03-15T10:00:00Z"
 # }
 
+### PATCH - Actualizar evento (SOLO ADMIN)
+# Requiere: @adminToken
+# PATCH {{baseUrl}}/v1/events/1
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "title": "Reunion actualizada",
+#   "description": "Descripcion actualizada del evento",
+#   "isVisible": true
+# }
+
+### PATCH - Toggle isVisible de un evento (SOLO ADMIN)
+# Requiere: @adminToken
+# PATCH {{baseUrl}}/v1/events/1
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "isVisible": true
+# }
+
 ### DELETE - Eliminar evento (SOLO ADMIN)
 # Requiere: @adminToken
 # DELETE {{baseUrl}}/v1/events/1

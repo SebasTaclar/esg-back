@@ -35,6 +35,64 @@ export class EventPrismaAdapter implements IEventDataSource {
     });
   }
 
+  async getById(id: number): Promise<Event | null> {
+    return await this.prisma.event.findUnique({
+      where: { id },
+    });
+  }
+
+  async update(
+    id: number,
+    data: {
+      title?: string;
+      entityType?: string | null;
+      entityId?: number | null;
+      client?: string;
+      type?: string;
+      typeOtro?: string;
+      description?: string;
+      date?: string;
+      endDate?: string;
+      modalidad?: string;
+      modalidadOtro?: string;
+      location?: string;
+      personaContacto?: string;
+      user?: string;
+      userOtro?: string;
+      leadAuditor?: string;
+      coAuditors?: string;
+      normas?: string;
+      isVisible?: boolean;
+    }
+  ): Promise<Event> {
+    const updateData: Record<string, unknown> = {};
+
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.entityType !== undefined) updateData.entityType = data.entityType;
+    if (data.entityId !== undefined) updateData.entityId = data.entityId;
+    if (data.client !== undefined) updateData.client = data.client;
+    if (data.type !== undefined) updateData.type = data.type;
+    if (data.typeOtro !== undefined) updateData.typeOtro = data.typeOtro;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.date !== undefined) updateData.date = new Date(data.date);
+    if (data.endDate !== undefined) updateData.endDate = data.endDate ? new Date(data.endDate) : null;
+    if (data.modalidad !== undefined) updateData.modalidad = data.modalidad;
+    if (data.modalidadOtro !== undefined) updateData.modalidadOtro = data.modalidadOtro;
+    if (data.location !== undefined) updateData.location = data.location;
+    if (data.personaContacto !== undefined) updateData.personaContacto = data.personaContacto;
+    if (data.user !== undefined) updateData.user = data.user;
+    if (data.userOtro !== undefined) updateData.userOtro = data.userOtro;
+    if (data.leadAuditor !== undefined) updateData.leadAuditor = data.leadAuditor;
+    if (data.coAuditors !== undefined) updateData.coAuditors = data.coAuditors;
+    if (data.normas !== undefined) updateData.normas = data.normas;
+    if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
+
+    return await this.prisma.event.update({
+      where: { id },
+      data: updateData,
+    });
+  }
+
   async create(data: {
     title?: string;
     entityType?: string | null;

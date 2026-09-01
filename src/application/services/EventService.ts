@@ -6,7 +6,7 @@ import { IProjectDataSource } from '../../domain/interfaces/IProjectDataSource';
 import { IQuoteDataSource } from '../../domain/interfaces/IQuoteDataSource';
 import { ITenderDataSource } from '../../domain/interfaces/ITenderDataSource';
 import { ICollaboratorDataSource } from '../../domain/interfaces/ICollaboratorDataSource';
-import { EventRequest, EventResponse } from '../../domain/entities/Event';
+import { EventRequest, UpdateEventRequest, EventResponse } from '../../domain/entities/Event';
 import { Event } from '@prisma/client';
 
 const ENTITY_LABELS: Record<string, string> = {
@@ -167,5 +167,43 @@ export class EventService {
 
     await this.eventDataSource.delete(id);
     this.logger.info(`Event ${id} deleted successfully`);
+  }
+
+  async updateEvent(id: number, request: UpdateEventRequest): Promise<EventResponse> {
+    this.logger.info(`Updating event ${id}`);
+
+    const existingEvent = await this.eventDataSource.getById(id);
+    if (!existingEvent) {
+      throw new NotFoundError(`Event with ID ${id} not found`);
+    }
+
+    if (request.entityType && request.entityId) {
+      await this.validateEntityExists(request.entityType, request.entityId);
+    }
+
+    const updatedEvent = await this.eventDataSource.update(id, {
+      title: request.title,
+      entityType: request.entityType,
+      entityId: request.entityId,
+      client: request.client,
+      type: request.type,
+      typeOtro: request.typeOtro,
+      description: request.description,
+      date: request.date,
+      endDate: request.endDate,
+      modalidad: request.modalidad,
+      modalidadOtro: request.modalidadOtro,
+      location: request.location,
+      personaContacto: request.personaContacto,
+      user: request.user,
+      userOtro: request.userOtro,
+      leadAuditor: request.leadAuditor,
+      coAuditors: request.coAuditors,
+      normas: request.normas,
+      isVisible: request.isVisible,
+    });
+
+    this.logger.info(`Event ${id} updated successfully`);
+    return toEventResponse(updatedEvent);
   }
 }

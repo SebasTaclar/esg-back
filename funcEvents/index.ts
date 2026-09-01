@@ -1,6 +1,6 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { getEventService } from '../src/shared/serviceProvider';
-import { EventRequest } from '../src/domain/entities/Event';
+import { EventRequest, UpdateEventRequest } from '../src/domain/entities/Event';
 import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
@@ -97,6 +97,48 @@ const funcEvents = async (
 
     const event = await eventService.createEvent(eventRequest);
     return { success: true, message: 'Event created successfully', data: event, timestamp: new Date().toISOString(), statusCode: 201 };
+  }
+
+  if (method === 'PATCH' && id) {
+    logger.info(`PATCH /events/${id}`);
+    if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid event ID');
+
+    const body = req.body as Record<string, unknown>;
+
+    const hasEntityType = body.entityType !== undefined && body.entityType !== null;
+    const hasEntityId = body.entityId !== undefined && body.entityId !== null;
+
+    if (hasEntityType && !hasEntityId) {
+      return ApiResponseBuilder.validationError(['entityId is required when entityType is provided']);
+    }
+    if (hasEntityId && !hasEntityType) {
+      return ApiResponseBuilder.validationError(['entityType is required when entityId is provided']);
+    }
+
+    const updateRequest: UpdateEventRequest = {
+      entityType: body.entityType as UpdateEventRequest['entityType'],
+      entityId: body.entityId as number | undefined,
+      title: body.title as string,
+      client: body.client as string,
+      type: body.type as string,
+      typeOtro: body.typeOtro as string,
+      description: body.description as string,
+      date: body.date as string,
+      endDate: body.endDate as string,
+      modalidad: body.modalidad as string,
+      modalidadOtro: body.modalidadOtro as string,
+      location: body.location as string,
+      personaContacto: body.personaContacto as string,
+      user: body.user as string,
+      userOtro: body.userOtro as string,
+      leadAuditor: body.leadAuditor as string,
+      coAuditors: body.coAuditors as string,
+      normas: body.normas as string,
+      isVisible: body.isVisible as boolean,
+    };
+
+    const event = await eventService.updateEvent(id, updateRequest);
+    return ApiResponseBuilder.success(event, 'Event updated successfully');
   }
 
   if (method === 'DELETE' && id) {
