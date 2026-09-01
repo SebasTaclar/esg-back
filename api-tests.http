@@ -284,6 +284,27 @@ Authorization: Bearer {{adminToken}}
   ]
 }
 
+### GET - Obtener colaborador por ID (requiere JWT)
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/collaborators/1
+# Authorization: Bearer {{adminToken}}
+
+### PATCH - Actualizar colaborador (requiere JWT)
+# Requiere: @adminToken
+# PATCH {{baseUrl}}/v1/collaborators/1
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "name": "Camila Rodriguez Updated",
+#   "status": "busy"
+# }
+
+### DELETE - Eliminar colaborador (requiere JWT)
+# Requiere: @adminToken
+# DELETE {{baseUrl}}/v1/collaborators/1
+# Authorization: Bearer {{adminToken}}
+
 
 # ==========================================================
 # 5. PROJECTS
@@ -736,6 +757,11 @@ Authorization: Bearer {{adminToken}}
 ### GET - Listar todos los documentos (requiere JWT)
 # Requiere: @adminToken
 # GET {{baseUrl}}/v1/documents?page=1&limit=10
+# Authorization: Bearer {{adminToken}}
+
+### DELETE - Eliminar documento (requiere JWT)
+# Requiere: @adminToken
+# DELETE {{baseUrl}}/v1/documents/1
 # Authorization: Bearer {{adminToken}}
 
 
