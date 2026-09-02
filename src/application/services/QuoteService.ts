@@ -7,7 +7,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 
 export interface QuoteRequest {
   code?: string;
-  clientId: number;
+  clientId?: number;
   projectId?: number;
   status?: string;
   totalAmount: number;
@@ -20,14 +20,14 @@ export interface QuoteRequest {
 export interface QuoteResponse {
   id: number;
   code?: string | null;
-  clientId: number;
+  clientId: number | null;
   client?: {
     id: number;
     name: string;
     email: string;
     phone?: string | null;
     nit: string;
-  };
+  } | null;
   projectId?: number | null;
   project?: {
     id: number;
@@ -102,11 +102,13 @@ export class QuoteService {
   }
 
   async createQuote(request: QuoteRequest): Promise<QuoteResponse> {
-    this.logger.info(`Creating quote for client ${request.clientId}`);
+    this.logger.info(`Creating quote for ${request.clientId ? `client ${request.clientId}` : 'standalone'}`);
 
-    const client = await this.clientDataSource.getById(request.clientId);
-    if (!client) {
-      throw new NotFoundError(`Client with ID ${request.clientId} not found`);
+    if (request.clientId) {
+      const client = await this.clientDataSource.getById(request.clientId);
+      if (!client) {
+        throw new NotFoundError(`Client with ID ${request.clientId} not found`);
+      }
     }
 
     if (request.projectId && this.projectDataSource) {

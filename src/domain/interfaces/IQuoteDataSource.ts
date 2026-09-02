@@ -15,7 +15,7 @@ export interface IQuoteDataSource {
   getByProjectId(projectId: number, page: number, limit: number): Promise<{ quotes: Quote[]; total: number }>;
   create(data: {
     code?: string;
-    clientId: number;
+    clientId?: number;
     projectId?: number;
     status?: string;
     totalAmount: number;

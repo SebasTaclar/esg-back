@@ -28,14 +28,8 @@
 # 1. SEED & SETUP
 # ==========================================================
 
-### Ejecutar seed (crear admin inicial) - Ejecutar una sola vez
-# POST {{baseUrl}}/v1/seed/admin
-# Content-Type: application/json
-# 
-# {
-#   "email": "admin@esg.com",
-#   "password": "Admin123!"
-# }
+### Ejecutar seed (crear admin inicial) - Ejecutar una sola vez desde terminal
+# npm run db:seed
 
 ### Health Check - Verificar conexion a BD
 GET {{baseUrl}}/v1/health/db
@@ -619,43 +613,86 @@ Authorization: Bearer {{adminToken}}
   ]
 }
 
+### POST - Crear cotizacion standalone (sin cliente)
+# Requiere: @adminToken
+POST {{baseUrl}}/v1/quotes
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "code": "COT-STANDALONE-001",
+  "status": "pendiente",
+  "totalAmount": 5000000,
+  "validUntil": "2025-06-30",
+  "isVisible": false,
+  "services": [
+    {
+      "name": "Servicio standalone",
+      "quantity": 1,
+      "billingType": "ONETIME",
+      "value": 5000000
+    }
+  ]
+}
+
+### POST - Crear cotizacion con clientId inexistente - Deberia fallar (404)
+# Requiere: @adminToken
+POST {{baseUrl}}/v1/quotes
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "code": "COT-INV-001",
+  "clientId": 99999,
+  "status": "pendiente",
+  "totalAmount": 3000000,
+  "services": [
+    {
+      "name": "Servicio test",
+      "quantity": 1,
+      "billingType": "ONETIME",
+      "value": 3000000
+    }
+  ]
+}
+
 ### POST - Crear cotizacion visible para clientes
 # Requiere: @adminToken
-# POST {{baseUrl}}/v1/quotes
-# Content-Type: application/json
-# Authorization: Bearer {{adminToken}}
-#
-# {
-#   "code": "COT-VIS-001",
-#   "clientId": 1,
-#   "status": "aprobada",
-#   "totalAmount": 3000000,
-#   "validUntil": "2025-06-30",
-#   "isVisible": true,
-#   "services": [
-#     {
-#       "name": "Servicio visible",
-#       "quantity": 1,
-#       "billingType": "ONETIME",
-#       "value": 3000000
-#     }
-#   ]
-# }
+POST {{baseUrl}}/v1/quotes
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "code": "COT-VIS-001",
+  "clientId": 1,
+  "status": "aprobada",
+  "totalAmount": 3000000,
+  "validUntil": "2025-06-30",
+  "isVisible": true,
+  "services": [
+    {
+      "name": "Servicio visible",
+      "quantity": 1,
+      "billingType": "ONETIME",
+      "value": 3000000
+    }
+  ]
+}
 
 ### PATCH - Toggle isVisible de una cotizacion (SOLO ADMIN)
 # Requiere: @adminToken
-# PATCH {{baseUrl}}/v1/quotes/1
-# Content-Type: application/json
-# Authorization: Bearer {{adminToken}}
-#
-# {
-#   "isVisible": true
-# }
+PATCH {{baseUrl}}/v1/quotes/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "isVisible": true
+}
 
 ### DELETE - Eliminar cotizacion (SOLO ADMIN)
 # Requiere: @adminToken
-# DELETE {{baseUrl}}/v1/quotes/1
-# Authorization: Bearer {{adminToken}}
+DELETE {{baseUrl}}/v1/quotes/1
+Authorization: Bearer {{adminToken}}
 
 
 # ==========================================================
@@ -989,7 +1026,7 @@ Authorization: Bearer {{adminToken}}
 # ==========================================================
 #
 # FLUJO DE USO:
-#   1. Ejecutar seed para crear admin@esg.com (una sola vez)
+#   1. Ejecutar seed para crear admin (una sola vez)
 #   2. Login como admin -> copiar token en @adminToken
 #   3. Crear usuarios cliente con POST /v1/user/create
 #   4. Asociar clients a usuarios con PATCH /v1/clients/{id}/assign-user
@@ -1017,6 +1054,11 @@ Authorization: Bearer {{adminToken}}
 #   - Ambos enviados: valida que la entidad exista
 #   - Ambos null: evento standalone, sin asociacion
 #   - Solo uno: error 422 "entityId is required when entityType is provided"
+#
+# QUOTES - clientId:
+#   - Enviado: valida que el cliente exista
+#   - Omisible: cotizacion standalone, sin cliente asociado
+#   - Al eliminar un Client, sus quotes quedan con clientId: null (SetNull)
 #
 # RESPUESTA ESTANDAR:
 #   { "success": true, "data": {...}, "message": "...", "timestamp": "...", "statusCode": 200 }

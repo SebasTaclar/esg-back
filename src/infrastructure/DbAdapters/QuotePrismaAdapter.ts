@@ -68,7 +68,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
 
   async create(data: {
     code?: string;
-    clientId: number;
+    clientId?: number;
     projectId?: number;
     status?: string;
     totalAmount: number;
@@ -80,7 +80,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
     return await this.prisma.quote.create({
       data: {
         code: data.code || null,
-        clientId: data.clientId,
+        clientId: data.clientId ?? null,
         projectId: data.projectId || null,
         status: data.status || 'pendiente',
         totalAmount: data.totalAmount,

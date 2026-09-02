@@ -112,7 +112,6 @@ const funcQuotes = async (
     const body = req.body as Record<string, unknown>;
 
     const errors: string[] = [];
-    if (!body.clientId) errors.push('clientId is required');
     if (!body.services || !Array.isArray(body.services) || body.services.length === 0) {
       errors.push('services array is required and must contain at least one service');
     }
