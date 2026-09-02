@@ -67,16 +67,14 @@ Content-Type: application/json
 
 ### Crear Usuario (SOLO ADMIN)
 # Requiere: @adminToken del loginAdmin
+# Requiere: cambiar @targetClientId por el ID real del cliente a vincular
 POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "email": "cliente@ejemplo.com",
-  "password": "cliente123",
-  "name": "Juan Perez",
-  "role": "user",
-  "membershipPaid": false
+  "clientId": "@targetClientId",
+  "password": "cliente123"
 }
 
 ### Crear Usuario - Deberia fallar sin token (401)
@@ -84,10 +82,8 @@ POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
 
 {
-  "email": "test@example.com",
-  "password": "test123",
-  "name": "Test User",
-  "role": "user"
+  "clientId": 1,
+  "password": "test123"
 }
 
 ### Crear Usuario - Deberia fallar con rol user (403)
@@ -97,11 +93,178 @@ Content-Type: application/json
 Authorization: Bearer {{clientToken}}
 
 {
-  "email": "otro@example.com",
-  "password": "otro123",
-  "name": "Otro User",
-  "role": "user"
+  "clientId": 1,
+  "password": "test123"
 }
+
+### Crear Usuario - Deberia fallar si el clientId ya tiene usuario (409)
+# Requiere: @adminToken del loginAdmin
+# El cliente ya tiene un usuario asignado
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "clientId": "@targetClientId",
+  "password": "otro123"
+}
+
+### Crear Usuario - Deberia fallar si el clientId no existe (400)
+# Requiere: @adminToken del loginAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "clientId": 99999,
+  "password": "test123"
+}
+
+### Crear Usuario - Deberia fallar sin clientId (422)
+# Requiere: @adminToken del loginAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "password": "test123"
+}
+
+### Crear Usuario - Deberia fallar sin password (422)
+# Requiere: @adminToken del loginAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "clientId": "@targetClientId"
+}
+
+### Crear Usuario - Deberia fallar con password muy corta (400)
+# Requiere: @adminToken del loginAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "clientId": "@targetClientId",
+  "password": "123"
+}
+
+
+# ==========================================================
+# 2.1. LIST USERS (SOLO ADMIN)
+# ==========================================================
+
+### GET - Listar todos los usuarios con clientes asociados (ADMIN)
+# Requiere: @adminToken del loginAdmin
+GET {{baseUrl}}/v1/users
+Authorization: Bearer {{adminToken}}
+
+### GET - Listar usuarios - Deberia fallar con rol user (403)
+# Requiere: @clientToken del loginClient
+GET {{baseUrl}}/v1/users
+Authorization: Bearer {{clientToken}}
+
+### GET - Listar usuarios - Deberia fallar sin token (401)
+GET {{baseUrl}}/v1/users
+
+
+# ==========================================================
+# 2.2. CHANGE PASSWORD (SOLO ADMIN)
+# ==========================================================
+
+### PATCH - Admin cambia contraseña de usuario - Exito
+# Requiere: @adminToken del loginAdmin
+# Requiere: cambiar @targetUserId por el ID real del usuario
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "newPassword": "nuevaClave456",
+  "userId": "@targetUserId"
+}
+
+### PATCH - Cambiar contraseña - Deberia fallar sin token (401)
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+
+{
+  "newPassword": "nuevaClave456",
+  "userId": "1"
+}
+
+### PATCH - Cambiar contraseña - Deberia fallar sin userId (422)
+# Requiere: @adminToken del loginAdmin
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "newPassword": "nuevaClave456"
+}
+
+### PATCH - Cambiar contraseña - Deberia fallar si la nueva es muy corta (422)
+# Requiere: @adminToken del loginAdmin
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "newPassword": "123",
+  "userId": "@targetUserId"
+}
+
+### PATCH - Cambiar contraseña - Deberia fallar si la nueva es igual a la actual (400)
+# Requiere: @adminToken del loginAdmin
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "newPassword": "nuevaClave456",
+  "userId": "@targetUserId"
+}
+
+### PATCH - Cambiar contraseña - Deberia fallar si user no es admin (403)
+# Requiere: @clientToken del loginClient
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{clientToken}}
+
+{
+  "newPassword": "hacker123",
+  "userId": "1"
+}
+
+
+# ==========================================================
+# 2.3. DELETE USER (SOLO ADMIN)
+# ==========================================================
+
+### DELETE - Eliminar usuario - Exito
+# Requiere: @adminToken del loginAdmin
+# Requiere: cambiar @targetUserId por el ID real del usuario a eliminar
+DELETE {{baseUrl}}/v1/users/@targetUserId
+Authorization: Bearer {{adminToken}}
+
+### DELETE - Eliminar usuario - Deberia fallar sin token (401)
+DELETE {{baseUrl}}/v1/users/1
+
+### DELETE - Eliminar usuario - Deberia fallar con rol user (403)
+# Requiere: @clientToken del loginClient
+DELETE {{baseUrl}}/v1/users/1
+Authorization: Bearer {{clientToken}}
+
+### DELETE - Eliminar usuario - Deberia fallar si intenta eliminarse a si mismo (400)
+# Requiere: @adminToken del loginAdmin (usa el ID del propio admin)
+DELETE {{baseUrl}}/v1/users/@adminUserId
+Authorization: Bearer {{adminToken}}
+
+### DELETE - Eliminar usuario - Deberia fallar con ID invalido (400)
+DELETE {{baseUrl}}/v1/users/abc
+Authorization: Bearer {{adminToken}}
 
 
 # ==========================================================

@@ -1,5 +1,5 @@
 import { getPrismaClient } from '../../config/PrismaClient';
-import { IUserDataSource } from '../../domain/interfaces/IUserDataSource';
+import { IUserDataSource, UserWithClients } from '../../domain/interfaces/IUserDataSource';
 import { User } from '../../domain/entities/User';
 import { Prisma } from '@prisma/client';
 
@@ -41,6 +41,36 @@ export class UserPrismaAdapter implements IUserDataSource {
     });
 
     return users as User[];
+  }
+
+  public async getAllWithClients(): Promise<UserWithClients[]> {
+    const users = await this.prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        membershipPaid: true,
+        clients: {
+          take: 1,
+          select: {
+            id: true,
+            name: true,
+            nit: true,
+            email: true,
+            phone: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+
+    return users.map((u) => ({
+      ...u,
+      client: u.clients[0] || null,
+      clients: undefined,
+    })) as unknown as UserWithClients[];
   }
 
   public async getById(id: string): Promise<User | null> {

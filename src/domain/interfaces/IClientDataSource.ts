@@ -63,6 +63,7 @@ export interface IClientDataSource {
       contacts?: Contact[];
       resources?: Resource[];
       isVisible?: boolean;
+      userId?: number | null;
     }
   ): Promise<Client>;
   delete(id: number): Promise<void>;

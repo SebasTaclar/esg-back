@@ -117,6 +117,7 @@ export class ClientPrismaAdapter implements IClientDataSource {
       contacts?: Contact[];
       resources?: Resource[];
       isVisible?: boolean;
+      userId?: number | null;
     }
   ): Promise<Client> {
     const updateData: Record<string, unknown> = {};
@@ -139,6 +140,7 @@ export class ClientPrismaAdapter implements IClientDataSource {
     if (data.contacts !== undefined) updateData.contacts = data.contacts as unknown as Prisma.InputJsonValue;
     if (data.resources !== undefined) updateData.resources = data.resources as unknown as Prisma.InputJsonValue;
     if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
+    if (data.userId !== undefined) updateData.userId = data.userId;
 
     return await this.prisma.client.update({
       where: { id },

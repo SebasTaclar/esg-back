@@ -90,7 +90,8 @@ export class ServiceProvider {
 
   static getAuthService(logger: Logger): AuthService {
     const userDataSource = this.getUserDataSource();
-    return new AuthService(logger, userDataSource);
+    const clientDataSource = this.getClientDataSource();
+    return new AuthService(logger, userDataSource, clientDataSource);
   }
 
   static getCategoryService(logger: Logger): CategoryService {
