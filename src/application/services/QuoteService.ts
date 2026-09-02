@@ -8,6 +8,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 export interface QuoteRequest {
   code?: string;
   clientId?: number;
+  clientName?: string;
   projectId?: number;
   status?: string;
   totalAmount: number;
@@ -21,6 +22,7 @@ export interface QuoteResponse {
   id: number;
   code?: string | null;
   clientId: number | null;
+  clientName?: string | null;
   client?: {
     id: number;
     name: string;
@@ -47,6 +49,7 @@ export interface QuoteResponse {
 export interface UpdateQuoteRequest {
   code?: string;
   clientId?: number;
+  clientName?: string;
   projectId?: number;
   status?: string;
   totalAmount?: number;
@@ -104,11 +107,14 @@ export class QuoteService {
   async createQuote(request: QuoteRequest): Promise<QuoteResponse> {
     this.logger.info(`Creating quote for ${request.clientId ? `client ${request.clientId}` : 'standalone'}`);
 
+    let clientName = request.clientName;
+
     if (request.clientId) {
       const client = await this.clientDataSource.getById(request.clientId);
       if (!client) {
         throw new NotFoundError(`Client with ID ${request.clientId} not found`);
       }
+      clientName = client.name;
     }
 
     if (request.projectId && this.projectDataSource) {
@@ -129,6 +135,7 @@ export class QuoteService {
     const quote = await this.quoteDataSource.create({
       code: request.code,
       clientId: request.clientId,
+      clientName: clientName,
       projectId: request.projectId,
       status: request.status,
       totalAmount: request.totalAmount || totalAmount,
@@ -160,7 +167,20 @@ export class QuoteService {
     const updateData: Record<string, unknown> = {};
 
     if (request.code !== undefined) updateData.code = request.code;
-    if (request.clientId !== undefined) updateData.clientId = request.clientId;
+    if (request.clientId !== undefined) {
+      updateData.clientId = request.clientId;
+      if (request.clientId) {
+        const client = await this.clientDataSource.getById(request.clientId);
+        if (!client) {
+          throw new NotFoundError(`Client with ID ${request.clientId} not found`);
+        }
+        updateData.clientName = client.name;
+      } else {
+        updateData.clientName = request.clientName ?? null;
+      }
+    } else if (request.clientName !== undefined) {
+      updateData.clientName = request.clientName;
+    }
     if (request.projectId !== undefined) updateData.projectId = request.projectId;
     if (request.status !== undefined) updateData.status = request.status;
     if (request.validUntil !== undefined) updateData.validUntil = request.validUntil;
@@ -186,7 +206,7 @@ export class QuoteService {
       updateData.isVisible = request.isVisible;
     }
 
-    const updatedQuote = await this.quoteDataSource.update(id, updateData as { services?: QuoteServiceType[]; totalAmount?: number; code?: string; clientId?: number; projectId?: number; status?: string; validUntil?: string; observations?: string; isVisible?: boolean });
+    const updatedQuote = await this.quoteDataSource.update(id, updateData as { services?: QuoteServiceType[]; totalAmount?: number; code?: string; clientId?: number; clientName?: string; projectId?: number; status?: string; validUntil?: string; observations?: string; isVisible?: boolean });
 
     this.logger.info(`Quote ${id} updated successfully`);
     return updatedQuote as unknown as QuoteResponse;

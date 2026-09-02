@@ -130,6 +130,7 @@ const funcQuotes = async (
     const quoteRequest: QuoteRequest = {
       code: body.code as string,
       clientId: body.clientId as number,
+      clientName: body.clientName as string,
       projectId: body.projectId as number,
       status: body.status as string,
       totalAmount: body.totalAmount as number,
@@ -151,6 +152,7 @@ const funcQuotes = async (
     const updateRequest: UpdateQuoteRequest = {
       code: body.code as string,
       clientId: body.clientId as number,
+      clientName: body.clientName as string,
       projectId: body.projectId as number,
       status: body.status as string,
       totalAmount: body.totalAmount as number,

@@ -69,6 +69,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
   async create(data: {
     code?: string;
     clientId?: number;
+    clientName?: string;
     projectId?: number;
     status?: string;
     totalAmount: number;
@@ -81,6 +82,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
       data: {
         code: data.code || null,
         clientId: data.clientId ?? null,
+        clientName: data.clientName ?? null,
         projectId: data.projectId || null,
         status: data.status || 'pendiente',
         totalAmount: data.totalAmount,
@@ -98,6 +100,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
     data: {
       code?: string;
       clientId?: number;
+      clientName?: string;
       projectId?: number;
       status?: string;
       totalAmount?: number;
@@ -111,6 +114,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
 
     if (data.code !== undefined) updateData.code = data.code;
     if (data.clientId !== undefined) updateData.clientId = data.clientId;
+    if (data.clientName !== undefined) updateData.clientName = data.clientName;
     if (data.projectId !== undefined) updateData.projectId = data.projectId;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.totalAmount !== undefined) updateData.totalAmount = data.totalAmount;
@@ -140,6 +144,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
         where: {
           OR: [
             { code: { contains: query, mode: 'insensitive' } },
+            { clientName: { contains: query, mode: 'insensitive' } },
             { client: { name: { contains: query, mode: 'insensitive' } } },
             { client: { email: { contains: query, mode: 'insensitive' } } },
           ],
@@ -153,6 +158,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
         where: {
           OR: [
             { code: { contains: query, mode: 'insensitive' } },
+            { clientName: { contains: query, mode: 'insensitive' } },
             { client: { name: { contains: query, mode: 'insensitive' } } },
             { client: { email: { contains: query, mode: 'insensitive' } } },
           ],

@@ -16,6 +16,7 @@ export interface IQuoteDataSource {
   create(data: {
     code?: string;
     clientId?: number;
+    clientName?: string;
     projectId?: number;
     status?: string;
     totalAmount: number;
@@ -29,6 +30,7 @@ export interface IQuoteDataSource {
     data: {
       code?: string;
       clientId?: number;
+      clientName?: string;
       projectId?: number;
       status?: string;
       totalAmount?: number;

@@ -569,6 +569,11 @@ Authorization: Bearer {{adminToken}}
 # GET {{baseUrl}}/v1/quotes?page=1&limit=10
 # Authorization: Bearer {{clientToken}}
 
+### GET - Buscar cotizaciones por clientName, codigo o cliente
+# Requiere: @adminToken
+# GET {{baseUrl}}/v1/quotes?search=Empresa&page=1&limit=10
+# Authorization: Bearer {{adminToken}}
+
 ### GET - Obtener cotizacion por ID (ADMIN)
 # Requiere: @adminToken
 # GET {{baseUrl}}/v1/quotes/1
@@ -589,7 +594,7 @@ Authorization: Bearer {{adminToken}}
 # GET {{baseUrl}}/v1/quotes?projectId=1&page=1&limit=10
 # Authorization: Bearer {{adminToken}}
 
-### POST - Crear cotizacion (requiere JWT)
+### POST - Crear cotizacion con clientId (clientName se obtiene de la BD)
 # Requiere: @adminToken
 POST {{baseUrl}}/v1/quotes
 Content-Type: application/json
@@ -613,7 +618,7 @@ Authorization: Bearer {{adminToken}}
   ]
 }
 
-### POST - Crear cotizacion standalone (sin cliente)
+### POST - Crear cotizacion standalone con clientName (sin clientId)
 # Requiere: @adminToken
 POST {{baseUrl}}/v1/quotes
 Content-Type: application/json
@@ -621,6 +626,7 @@ Authorization: Bearer {{adminToken}}
 
 {
   "code": "COT-STANDALONE-001",
+  "clientName": "Empresa sin registro",
   "status": "pendiente",
   "totalAmount": 5000000,
   "validUntil": "2025-06-30",
@@ -688,6 +694,16 @@ Authorization: Bearer {{adminToken}}
 {
   "isVisible": true
 }
+
+### PATCH - Actualizar clientName de una cotizacion
+# Requiere: @adminToken
+# PATCH {{baseUrl}}/v1/quotes/1
+# Content-Type: application/json
+# Authorization: Bearer {{adminToken}}
+#
+# {
+#   "clientName": "Nuevo nombre del cliente"
+# }
 
 ### DELETE - Eliminar cotizacion (SOLO ADMIN)
 # Requiere: @adminToken
@@ -1055,9 +1071,10 @@ Authorization: Bearer {{adminToken}}
 #   - Ambos null: evento standalone, sin asociacion
 #   - Solo uno: error 422 "entityId is required when entityType is provided"
 #
-# QUOTES - clientId:
-#   - Enviado: valida que el cliente exista
-#   - Omisible: cotizacion standalone, sin cliente asociado
+# QUOTES - clientId y clientName:
+#   - clientId enviado: valida que el cliente exista, guarda nombre en clientName automaticamente
+#   - Sin clientId, con clientName: guarda el texto libre del frontend en clientName
+#   - Sin ninguno: ambos campos quedan null (cotizacion standalone)
 #   - Al eliminar un Client, sus quotes quedan con clientId: null (SetNull)
 #
 # RESPUESTA ESTANDAR:

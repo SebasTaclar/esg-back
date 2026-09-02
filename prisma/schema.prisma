@@ -156,6 +156,7 @@ model Quote {
   id           Int       @id @default(autoincrement())
   code         String?
   clientId     Int?      @map("client_id")
+  clientName   String?   @map("client_name")
   projectId    Int?      @map("project_id")
   status       String    @default("pendiente")
   totalAmount  Decimal   @map("total_amount") @db.Decimal(15, 2)
