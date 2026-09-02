@@ -20,11 +20,11 @@ const prisma = new PrismaClient();
 async function main() {
   loadEnvVars();
 
-  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@esg.com';
+  const adminEmail = process.env.SEED_ADMIN_EMAIL;
   const adminPassword = process.env.SEED_ADMIN_PASSWORD;
 
-  if (!adminPassword) {
-    console.error('SEED_ADMIN_PASSWORD is not set. Add it to local.settings.json or set it as an environment variable.');
+  if (!adminEmail || !adminPassword) {
+    console.error('SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD must be set in local.settings.json or as environment variables.');
     process.exit(1);
   }
 

@@ -17,4 +17,4 @@ npm run start
 npm run db:seed
 ```
 
-Las credenciales se leen de `local.settings.json` (`SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`). Si no existen, usa `admin@esg.com` como email por defecto.
+Las credenciales se leen de `local.settings.json` (`SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`). Ambas son requeridas.
