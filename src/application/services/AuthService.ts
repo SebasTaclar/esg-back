@@ -150,9 +150,15 @@ export class AuthService {
     }
   }
 
-  async getAllUsers(): Promise<UserWithClients[]> {
-    this.logger.logInfo('Fetching all users with clients');
-    return await this.userDataSource.getAllWithClients();
+  async getAllUsers(requester: AuthenticatedUser): Promise<UserWithClients[]> {
+    this.logger.logInfo(`Fetching all users with clients (requested by ${requester.email} - ${requester.role})`);
+    const users = await this.userDataSource.getAllWithClients();
+
+    if (requester.role === USER_ROLES.ADMIN) {
+      return users.filter((u) => u.role !== USER_ROLES.SUPERADMIN);
+    }
+
+    return users;
   }
 
   async changePassword(targetUserId: string, newPassword: string, requester: AuthenticatedUser): Promise<void> {

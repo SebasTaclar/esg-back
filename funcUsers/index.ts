@@ -16,7 +16,7 @@ const funcUsers = async (
 
   if (method === 'GET') {
     const authService = getAuthService(log);
-    const users = await authService.getAllUsers();
+    const users = await authService.getAllUsers(user);
     return ApiResponseBuilder.success(users, 'Users retrieved successfully');
   }
 
