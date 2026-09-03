@@ -2,6 +2,7 @@
  * Constantes para roles de usuario en el sistema
  */
 export const USER_ROLES = {
+  SUPERADMIN: 'superadmin',
   ADMIN: 'admin',
   TEAM: 'team',
   USER: 'user',
@@ -28,6 +29,8 @@ export function isValidRole(role: string): role is UserRole {
  */
 export function getRoleDescription(role: UserRole): string {
   switch (role) {
+    case USER_ROLES.SUPERADMIN:
+      return 'Super Administrator';
     case USER_ROLES.ADMIN:
       return 'Administrator';
     case USER_ROLES.TEAM:

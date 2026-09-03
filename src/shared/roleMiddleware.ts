@@ -37,6 +37,13 @@ export const withRole = (allowedRoles: string[], handler: HandlerWithRole) => {
 };
 
 /**
+ * Verifica si el usuario tiene rol superadmin
+ */
+export const isSuperAdmin = (user: AuthenticatedUser): boolean => {
+  return user.role === USER_ROLES.SUPERADMIN;
+};
+
+/**
  * Verifica si el usuario tiene rol admin
  */
 export const isAdmin = (user: AuthenticatedUser): boolean => {
@@ -48,4 +55,40 @@ export const isAdmin = (user: AuthenticatedUser): boolean => {
  */
 export const isClient = (user: AuthenticatedUser): boolean => {
   return user.role === USER_ROLES.USER;
+};
+
+/**
+ * Verifica si el usuario puede modificar el password de un usuario target.
+ * - superadmin puede modificar a cualquiera
+ * - admin solo puede modificar su propio password y el de users normales
+ * - user no puede modificar a nadie
+ */
+export const canChangePassword = (requester: AuthenticatedUser, targetRole: string, isSelf: boolean): boolean => {
+  if (isSuperAdmin(requester)) return true;
+  if (isAdmin(requester)) return isSelf || targetRole === USER_ROLES.USER;
+  return false;
+};
+
+/**
+ * Verifica si el usuario puede eliminar a un usuario target.
+ * - superadmin puede eliminar a cualquiera
+ * - admin solo puede eliminar users normales
+ * - no puede eliminarse a sí mismo
+ */
+export const canDeleteUser = (requester: AuthenticatedUser, targetRole: string, isSelf: boolean): boolean => {
+  if (isSelf) return false;
+  if (isSuperAdmin(requester)) return true;
+  if (isAdmin(requester)) return targetRole === USER_ROLES.USER;
+  return false;
+};
+
+/**
+ * Verifica si el usuario puede crear un usuario con el rol especificado.
+ * - superadmin puede crear cualquier rol
+ * - admin solo puede crear users normales
+ */
+export const canCreateUserWithRole = (requester: AuthenticatedUser, targetRole: string): boolean => {
+  if (isSuperAdmin(requester)) return true;
+  if (isAdmin(requester)) return targetRole === USER_ROLES.USER;
+  return false;
 };

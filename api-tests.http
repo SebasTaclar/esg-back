@@ -1,4 +1,5 @@
 @baseUrl = http://localhost:7071/api
+@superadminToken = 
 @adminToken = 
 @clientToken = 
 
@@ -6,21 +7,32 @@
 # ESG CRM - API Tests
 # ==========================================================
 # Variables:
-#   @baseUrl      - URL base del backend (localhost:7071/api)
-#   @adminToken   - JWT token de admin (obtener del login)
-#   @clientToken  - JWT token de cliente (obtener del login)
+#   @baseUrl          - URL base del backend (localhost:7071/api)
+#   @superadminToken  - JWT token de superadmin (IT - acceso total)
+#   @adminToken       - JWT token de admin (cambio passwords, CRUD users normales)
+#   @clientToken      - JWT token de cliente (solo ve lo suyo)
 #
 # Roles:
-#   admin  - Acceso completo, puede crear usuarios y asignar clients
-#   user   - Solo ve los clients asociados a su userId
+#   superadmin - Acceso total: crear admin/superadmin, cambiar cualquier password, eliminar cualquier usuario
+#   admin      - Crear users normales, cambiar passwords de users y propio, eliminar users normales
+#   user       - Solo ve los clients asociados a su userId
 #
 # isVisible:
 #   Cada entidad CRM tiene campo boolean isVisible (default: false).
-#   Admin ve todos. Client solo ve registros con isVisible: true.
+#   Admin/superadmin ven todos. Client solo ve registros con isVisible: true.
 #   POST/PATCH con isVisible: true/false para controlar visibilidad.
 #
 # Respuesta estandar:
 #   { "success": true, "data": {...}, "message": "...", "timestamp": "...", "statusCode": 200 }
+#
+# MATRIZ DE PERMISOS:
+#   superadmin puede TODO
+#   admin puede:
+#     - Listar usuarios
+#     - Crear users normales (no admin, no superadmin)
+#     - Cambiar password de users normales y el suyo propio
+#     - Eliminar users normales (no a si mismo, no a otros admin, no a superadmin)
+#   user no puede nada de lo anterior
 # ==========================================================
 
 
@@ -28,7 +40,7 @@
 # 1. SEED & SETUP
 # ==========================================================
 
-### Ejecutar seed (crear admin inicial) - Ejecutar una sola vez desde terminal
+### Ejecutar seed (crear superadmin inicial) - Ejecutar una sola vez desde terminal
 # npm run db:seed
 
 ### Health Check - Verificar conexion a BD
@@ -39,13 +51,23 @@ GET {{baseUrl}}/v1/health/db
 # 2. AUTH & USERS
 # ==========================================================
 
+### Login - Obtener JWT de SuperAdmin (IT)
+# @name loginSuperAdmin
+POST {{baseUrl}}/v1/login
+Content-Type: application/json
+
+{
+  "email": "admin@esg.com",
+  "password": "esg123"
+}
+
 ### Login - Obtener JWT de Admin
 # @name loginAdmin
 POST {{baseUrl}}/v1/login
 Content-Type: application/json
 
 {
-  "email": "admin@esg.com",
+  "email": "admin2@esg.com",
   "password": "Admin123!"
 }
 
@@ -59,9 +81,33 @@ Content-Type: application/json
   "password": "cliente123"
 }
 
-### Crear Usuario (SOLO ADMIN)
-# Requiere: @adminToken del loginAdmin
+### Crear Usuario (SUPERADMIN puede crear cualquier rol)
+# Requiere: @superadminToken del loginSuperAdmin
 # Requiere: cambiar @targetClientId por el ID real del cliente a vincular
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{superadminToken}}
+
+{
+  "clientId": "@targetClientId",
+  "password": "cliente123",
+  "role": "user"
+}
+
+### Crear Admin (SOLO SUPERADMIN puede crear admins)
+# Requiere: @superadminToken del loginSuperAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{superadminToken}}
+
+{
+  "clientId": "@targetClientId",
+  "password": "admin123",
+  "role": "admin"
+}
+
+### Crear Usuario (ADMIN solo puede crear users normales)
+# Requiere: @adminToken del loginAdmin
 POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
@@ -69,6 +115,30 @@ Authorization: Bearer {{adminToken}}
 {
   "clientId": "@targetClientId",
   "password": "cliente123"
+}
+
+### Crear Usuario - Deberia fallar si admin intenta crear admin (403)
+# Requiere: @adminToken del loginAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "clientId": "@targetClientId",
+  "password": "admin123",
+  "role": "admin"
+}
+
+### Crear Usuario - Deberia fallar si admin intenta crear superadmin (403)
+# Requiere: @adminToken del loginAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "clientId": "@targetClientId",
+  "password": "super123",
+  "role": "superadmin"
 }
 
 ### Crear Usuario - Deberia fallar sin token (401)
@@ -92,11 +162,10 @@ Authorization: Bearer {{clientToken}}
 }
 
 ### Crear Usuario - Deberia fallar si el clientId ya tiene usuario (409)
-# Requiere: @adminToken del loginAdmin
-# El cliente ya tiene un usuario asignado
+# Requiere: @superadminToken del loginSuperAdmin
 POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
-Authorization: Bearer {{adminToken}}
+Authorization: Bearer {{superadminToken}}
 
 {
   "clientId": "@targetClientId",
@@ -104,10 +173,10 @@ Authorization: Bearer {{adminToken}}
 }
 
 ### Crear Usuario - Deberia fallar si el clientId no existe (400)
-# Requiere: @adminToken del loginAdmin
+# Requiere: @superadminToken del loginSuperAdmin
 POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
-Authorization: Bearer {{adminToken}}
+Authorization: Bearer {{superadminToken}}
 
 {
   "clientId": 99999,
@@ -115,30 +184,30 @@ Authorization: Bearer {{adminToken}}
 }
 
 ### Crear Usuario - Deberia fallar sin clientId (422)
-# Requiere: @adminToken del loginAdmin
+# Requiere: @superadminToken del loginSuperAdmin
 POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
-Authorization: Bearer {{adminToken}}
+Authorization: Bearer {{superadminToken}}
 
 {
   "password": "test123"
 }
 
 ### Crear Usuario - Deberia fallar sin password (422)
-# Requiere: @adminToken del loginAdmin
+# Requiere: @superadminToken del loginSuperAdmin
 POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
-Authorization: Bearer {{adminToken}}
+Authorization: Bearer {{superadminToken}}
 
 {
   "clientId": "@targetClientId"
 }
 
 ### Crear Usuario - Deberia fallar con password muy corta (400)
-# Requiere: @adminToken del loginAdmin
+# Requiere: @superadminToken del loginSuperAdmin
 POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
-Authorization: Bearer {{adminToken}}
+Authorization: Bearer {{superadminToken}}
 
 {
   "clientId": "@targetClientId",
@@ -147,8 +216,13 @@ Authorization: Bearer {{adminToken}}
 
 
 # ==========================================================
-# 2.1. LIST USERS (SOLO ADMIN)
+# 2.1. LIST USERS (ADMIN Y SUPERADMIN)
 # ==========================================================
+
+### GET - Listar todos los usuarios con clientes asociados (SUPERADMIN)
+# Requiere: @superadminToken del loginSuperAdmin
+GET {{baseUrl}}/v1/users
+Authorization: Bearer {{superadminToken}}
 
 ### GET - Listar todos los usuarios con clientes asociados (ADMIN)
 # Requiere: @adminToken del loginAdmin
@@ -165,12 +239,23 @@ GET {{baseUrl}}/v1/users
 
 
 # ==========================================================
-# 2.2. CHANGE PASSWORD (SOLO ADMIN)
+# 2.2. CHANGE PASSWORD (SUPERADMIN Y ADMIN)
 # ==========================================================
 
-### PATCH - Admin cambia contraseña de usuario - Exito
-# Requiere: @adminToken del loginAdmin
+### PATCH - SuperAdmin cambia password de cualquier usuario - Exito
+# Requiere: @superadminToken del loginSuperAdmin
 # Requiere: cambiar @targetUserId por el ID real del usuario
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{superadminToken}}
+
+{
+  "newPassword": "nuevaClave456",
+  "userId": "@targetUserId"
+}
+
+### PATCH - Admin cambia password de user normal - Exito
+# Requiere: @adminToken del loginAdmin
 PATCH {{baseUrl}}/v1/user/change-password
 Content-Type: application/json
 Authorization: Bearer {{adminToken}}
@@ -180,7 +265,51 @@ Authorization: Bearer {{adminToken}}
   "userId": "@targetUserId"
 }
 
-### PATCH - Cambiar contraseña - Deberia fallar sin token (401)
+### PATCH - Admin cambia su propio password - Exito
+# Requiere: @adminToken del loginAdmin
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "newPassword": "miNuevaClave789",
+  "userId": "@adminUserId"
+}
+
+### PATCH - Admin cambia password de otro admin - Deberia fallar (403)
+# Requiere: @adminToken del loginAdmin
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "newPassword": "hacker123",
+  "userId": "@otherAdminUserId"
+}
+
+### PATCH - Admin cambia password de superadmin - Deberia fallar (403)
+# Requiere: @adminToken del loginAdmin
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "newPassword": "hacker123",
+  "userId": "@superAdminUserId"
+}
+
+### PATCH - SuperAdmin cambia password de admin - Exito
+# Requiere: @superadminToken del loginSuperAdmin
+PATCH {{baseUrl}}/v1/user/change-password
+Content-Type: application/json
+Authorization: Bearer {{superadminToken}}
+
+{
+  "newPassword": "adminNuevaClave",
+  "userId": "@adminUserId"
+}
+
+### PATCH - Cambiar password - Deberia fallar sin token (401)
 PATCH {{baseUrl}}/v1/user/change-password
 Content-Type: application/json
 
@@ -189,7 +318,7 @@ Content-Type: application/json
   "userId": "1"
 }
 
-### PATCH - Cambiar contraseña - Deberia fallar sin userId (422)
+### PATCH - Cambiar password - Deberia fallar sin userId (422)
 # Requiere: @adminToken del loginAdmin
 PATCH {{baseUrl}}/v1/user/change-password
 Content-Type: application/json
@@ -199,7 +328,7 @@ Authorization: Bearer {{adminToken}}
   "newPassword": "nuevaClave456"
 }
 
-### PATCH - Cambiar contraseña - Deberia fallar si la nueva es muy corta (422)
+### PATCH - Cambiar password - Deberia fallar si la nueva es muy corta (422)
 # Requiere: @adminToken del loginAdmin
 PATCH {{baseUrl}}/v1/user/change-password
 Content-Type: application/json
@@ -210,7 +339,7 @@ Authorization: Bearer {{adminToken}}
   "userId": "@targetUserId"
 }
 
-### PATCH - Cambiar contraseña - Deberia fallar si la nueva es igual a la actual (400)
+### PATCH - Cambiar password - Deberia fallar si la nueva es igual a la actual (400)
 # Requiere: @adminToken del loginAdmin
 PATCH {{baseUrl}}/v1/user/change-password
 Content-Type: application/json
@@ -221,7 +350,7 @@ Authorization: Bearer {{adminToken}}
   "userId": "@targetUserId"
 }
 
-### PATCH - Cambiar contraseña - Deberia fallar si user no es admin (403)
+### PATCH - User normal intenta cambiar password - Deberia fallar (403)
 # Requiere: @clientToken del loginClient
 PATCH {{baseUrl}}/v1/user/change-password
 Content-Type: application/json
@@ -234,14 +363,33 @@ Authorization: Bearer {{clientToken}}
 
 
 # ==========================================================
-# 2.3. DELETE USER (SOLO ADMIN)
+# 2.3. DELETE USER (SUPERADMIN Y ADMIN)
 # ==========================================================
 
-### DELETE - Eliminar usuario - Exito
+### DELETE - SuperAdmin elimina cualquier usuario - Exito
+# Requiere: @superadminToken del loginSuperAdmin
+DELETE {{baseUrl}}/v1/users/@targetUserId
+Authorization: Bearer {{superadminToken}}
+
+### DELETE - Admin elimina user normal - Exito
 # Requiere: @adminToken del loginAdmin
-# Requiere: cambiar @targetUserId por el ID real del usuario a eliminar
 DELETE {{baseUrl}}/v1/users/@targetUserId
 Authorization: Bearer {{adminToken}}
+
+### DELETE - Admin intenta eliminar otro admin - Deberia fallar (403)
+# Requiere: @adminToken del loginAdmin
+DELETE {{baseUrl}}/v1/users/@otherAdminUserId
+Authorization: Bearer {{adminToken}}
+
+### DELETE - Admin intenta eliminar superadmin - Deberia fallar (403)
+# Requiere: @adminToken del loginAdmin
+DELETE {{baseUrl}}/v1/users/@superAdminUserId
+Authorization: Bearer {{adminToken}}
+
+### DELETE - SuperAdmin elimina admin - Exito
+# Requiere: @superadminToken del loginSuperAdmin
+DELETE {{baseUrl}}/v1/users/@adminUserId
+Authorization: Bearer {{superadminToken}}
 
 ### DELETE - Eliminar usuario - Deberia fallar sin token (401)
 DELETE {{baseUrl}}/v1/users/1
@@ -251,8 +399,8 @@ DELETE {{baseUrl}}/v1/users/1
 DELETE {{baseUrl}}/v1/users/1
 Authorization: Bearer {{clientToken}}
 
-### DELETE - Eliminar usuario - Deberia fallar si intenta eliminarse a si mismo (400)
-# Requiere: @adminToken del loginAdmin (usa el ID del propio admin)
+### DELETE - Eliminar usuario - Deberia fallar si intenta eliminarse a si mismo (403)
+# Requiere: @adminToken del loginAdmin
 DELETE {{baseUrl}}/v1/users/@adminUserId
 Authorization: Bearer {{adminToken}}
 
@@ -1108,17 +1256,36 @@ Authorization: Bearer {{adminToken}}
 # ==========================================================
 #
 # FLUJO DE USO:
-#   1. Ejecutar seed para crear admin (una sola vez)
-#   2. Login como admin -> copiar token en @adminToken
-#   3. Crear usuarios cliente con POST /v1/user/create
-#   4. Asociar clients a usuarios con PATCH /v1/clients/{id}/assign-user
-#   5. Login como cliente -> copiar token en @clientToken
-#   6. El cliente solo ve sus clients y registros con isVisible: true
+#   1. Ejecutar seed para crear superadmin (una sola vez: npm run db:seed)
+#   2. Login como superadmin -> copiar token en @superadminToken
+#   3. Crear admin con POST /v1/user/create (role: "admin")
+#   4. Login como admin -> copiar token en @adminToken
+#   5. Crear usuarios cliente con POST /v1/user/create
+#   6. Asociar clients a usuarios con PATCH /v1/clients/{id}/assign-user
+#   7. Login como cliente -> copiar token en @clientToken
+#   8. El cliente solo ve sus clients y registros con isVisible: true
+#
+# ROLES:
+#   superadmin (IT) - Acceso total al sistema
+#     - Crear/eliminar cualquier usuario (admin, superadmin, user)
+#     - Cambiar password de cualquier usuario
+#     - Acceso completo a todas las entidades CRM
+#   admin - Acceso limitado
+#     - Solo puede crear users normales (no admin, no superadmin)
+#     - Solo puede cambiar password de users normales y el suyo propio
+#     - Solo puede eliminar users normales (no otros admin, no superadmin, no a si mismo)
+#     - Acceso completo a entidades CRM
+#   user - Acceso minimo
+#     - Solo ve sus clients asociados
+#     - Solo ve registros con isVisible: true
 #
 # ENDPOINTS PROTEGIDOS POR ROL:
-#   POST /v1/user/create                -> Solo admin
-#   PATCH /v1/clients/{id}/assign-user  -> Solo admin
-#   GET/POST/PATCH/DELETE /v1/clients    -> Admin ve todo, user solo ve los suyos
+#   POST /v1/user/create                -> superadmin y admin
+#   PATCH /v1/user/change-password      -> superadmin y admin (con restricciones)
+#   DELETE /v1/users/{id}               -> superadmin y admin (con restricciones)
+#   GET /v1/users                       -> superadmin y admin
+#   PATCH /v1/clients/{id}/assign-user  -> superadmin y admin
+#   GET/POST/PATCH/DELETE /v1/clients    -> Admin/superadmin ven todo, user solo ve los suyos
 #   GET /v1/projects, /v1/quotes, /v1/tenders, /v1/events, /v1/documents
 #     -> Requieren JWT, clientes solo ven registros con isVisible: true
 #
@@ -1128,7 +1295,7 @@ Authorization: Bearer {{adminToken}}
 #
 # SISTEMA isVisible:
 #   Cada entidad CRM tiene campo boolean isVisible (default: false).
-#   - Admin puede crear/actualizar con isVisible en el body
+#   - Admin/superadmin pueden crear/actualizar con isVisible en el body
 #   - Client solo ve registros con isVisible: true
 #   - Al crear un registro, se puede enviar isVisible: true/false
 #

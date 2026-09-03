@@ -1,9 +1,12 @@
 ﻿import { generateToken } from '../../shared/jwtHelper';
 import { Logger } from '../../shared/Logger';
 import { PasswordUtils } from '../../shared/PasswordUtils';
-import { ValidationError, AuthenticationError, ConflictError } from '../../shared/exceptions';
+import { ValidationError, AuthenticationError, ConflictError, AuthorizationError } from '../../shared/exceptions';
 import { IUserDataSource, UserWithClients } from '../../domain/interfaces/IUserDataSource';
 import { IClientDataSource } from '../../domain/interfaces/IClientDataSource';
+import { canChangePassword, canDeleteUser, canCreateUserWithRole } from '../../shared/roleMiddleware';
+import { USER_ROLES } from '../../shared/UserRoles';
+import { AuthenticatedUser } from '../../shared/authMiddleware';
 
 export interface LoginRequest {
   email: string;
@@ -21,6 +24,7 @@ export interface UserInfo {
 export interface CreateUserRequest {
   clientId: number;
   password: string;
+  role?: string;
 }
 
 export class AuthService {
@@ -73,13 +77,22 @@ export class AuthService {
     return token;
   }
 
-  async createUser(createUserRequest: CreateUserRequest): Promise<UserInfo> {
-    const { clientId, password } = createUserRequest;
+  async createUser(createUserRequest: CreateUserRequest, requester: AuthenticatedUser): Promise<UserInfo> {
+    const { clientId, password, role } = createUserRequest;
 
-    this.logger.logInfo(`Creating user for client: ${clientId}`);
+    this.logger.logInfo(`Creating user for client: ${clientId} by ${requester.email} (${requester.role})`);
 
     if (!clientId || !password) {
       throw new ValidationError('clientId and password are required');
+    }
+
+    const targetRole = role || USER_ROLES.USER;
+
+    if (!canCreateUserWithRole(requester, targetRole)) {
+      this.logger.logWarning(
+        `Authorization denied: ${requester.email} (${requester.role}) cannot create user with role ${targetRole}`
+      );
+      throw new AuthorizationError('You do not have permission to create a user with this role');
     }
 
     // Validate password requirements
@@ -105,13 +118,13 @@ export class AuthService {
     // Hash password
     const hashedPassword = await PasswordUtils.hashPassword(password);
 
-    // Create user with client data, role hardcoded as "user"
+    // Create user with client data
     const newUser = {
       id: 0,
       email: targetClient.email,
       password: hashedPassword,
       name: targetClient.name,
-      role: 'user',
+      role: targetRole,
       membershipPaid: false,
     };
 
@@ -142,8 +155,8 @@ export class AuthService {
     return await this.userDataSource.getAllWithClients();
   }
 
-  async changePassword(targetUserId: string, newPassword: string): Promise<void> {
-    this.logger.logInfo(`Password change requested for user: ${targetUserId}`);
+  async changePassword(targetUserId: string, newPassword: string, requester: AuthenticatedUser): Promise<void> {
+    this.logger.logInfo(`Password change requested for user: ${targetUserId} by ${requester.email} (${requester.role})`);
 
     if (!newPassword) {
       throw new ValidationError('New password is required');
@@ -151,12 +164,21 @@ export class AuthService {
 
     PasswordUtils.validatePassword(newPassword);
 
-    const user = await this.userDataSource.getById(targetUserId);
-    if (!user) {
+    const targetUser = await this.userDataSource.getById(targetUserId);
+    if (!targetUser) {
       throw new ValidationError('User not found');
     }
 
-    const isSamePassword = await PasswordUtils.comparePassword(newPassword, user.password);
+    const isSelf = requester.id.toString() === targetUserId;
+
+    if (!canChangePassword(requester, targetUser.role, isSelf)) {
+      this.logger.logWarning(
+        `Authorization denied: ${requester.email} (${requester.role}) cannot change password for user ${targetUserId} (${targetUser.role})`
+      );
+      throw new AuthorizationError('You do not have permission to change this user\'s password');
+    }
+
+    const isSamePassword = await PasswordUtils.comparePassword(newPassword, targetUser.password);
     if (isSamePassword) {
       throw new ValidationError('New password must be different from current password');
     }
@@ -167,12 +189,21 @@ export class AuthService {
     this.logger.logInfo(`Password changed successfully for user: ${targetUserId}`);
   }
 
-  async deleteUser(id: string): Promise<void> {
-    this.logger.logInfo(`Delete requested for user: ${id}`);
+  async deleteUser(id: string, requester: AuthenticatedUser): Promise<void> {
+    this.logger.logInfo(`Delete requested for user: ${id} by ${requester.email} (${requester.role})`);
 
     const user = await this.userDataSource.getById(id);
     if (!user) {
       throw new ValidationError('User not found');
+    }
+
+    const isSelf = requester.id.toString() === id;
+
+    if (!canDeleteUser(requester, user.role, isSelf)) {
+      this.logger.logWarning(
+        `Authorization denied: ${requester.email} (${requester.role}) cannot delete user ${id} (${user.role})`
+      );
+      throw new AuthorizationError('You do not have permission to delete this user');
     }
 
     // Unlink associated clients before deleting

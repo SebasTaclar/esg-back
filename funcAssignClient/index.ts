@@ -2,7 +2,7 @@ import { Context, HttpRequest } from '@azure/functions';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
 import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
-import { withRole, isAdmin } from '../src/shared/roleMiddleware';
+import { withRole, isAdmin, isSuperAdmin } from '../src/shared/roleMiddleware';
 import { AuthenticatedUser } from '../src/shared/authMiddleware';
 import { getPrismaClient } from '../src/config/PrismaClient';
 
@@ -12,7 +12,7 @@ const funcAssignClient = async (
   log: Logger,
   user: AuthenticatedUser
 ): Promise<unknown> => {
-  if (!isAdmin(user)) {
+  if (!isAdmin(user) && !isSuperAdmin(user)) {
     return ApiResponseBuilder.error('Forbidden: Only admins can assign clients to users', 403);
   }
 
@@ -51,4 +51,4 @@ const funcAssignClient = async (
   return ApiResponseBuilder.success(updatedClient, 'Client assigned to user successfully');
 };
 
-export default withAuthenticatedApiHandler(withRole(['admin'], funcAssignClient));
+export default withAuthenticatedApiHandler(withRole(['superadmin', 'admin'], funcAssignClient));

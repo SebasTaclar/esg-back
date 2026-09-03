@@ -3,7 +3,7 @@ import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
 import { getAuthService } from '../src/shared/serviceProvider';
 import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
-import { withRole, isAdmin } from '../src/shared/roleMiddleware';
+import { withRole } from '../src/shared/roleMiddleware';
 import { AuthenticatedUser } from '../src/shared/authMiddleware';
 
 const funcUsers = async (
@@ -31,16 +31,12 @@ const funcUsers = async (
       return ApiResponseBuilder.badRequest('Invalid user ID');
     }
 
-    if (isAdmin(user) && user.id === id) {
-      return ApiResponseBuilder.badRequest('Cannot delete your own user');
-    }
-
     const authService = getAuthService(log);
-    await authService.deleteUser(id);
+    await authService.deleteUser(id, user);
     return ApiResponseBuilder.success({ id: numericId }, 'User deleted successfully');
   }
 
   return ApiResponseBuilder.methodNotAllowed(`Method ${method} not allowed for this endpoint`);
 };
 
-export default withAuthenticatedApiHandler(withRole(['admin'], funcUsers));
+export default withAuthenticatedApiHandler(withRole(['superadmin', 'admin'], funcUsers));

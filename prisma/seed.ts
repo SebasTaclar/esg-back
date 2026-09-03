@@ -40,13 +40,13 @@ async function main() {
     data: {
       email: adminEmail,
       password: hashedPassword,
-      name: 'Administrator',
-      role: 'admin',
+      name: 'Super Administrator',
+      role: 'superadmin',
       membershipPaid: true,
     },
   });
 
-  console.log(`Admin user created: ${admin.email} (id: ${admin.id})`);
+  console.log(`SuperAdmin user created: ${admin.email} (id: ${admin.id})`);
 }
 
 main()
