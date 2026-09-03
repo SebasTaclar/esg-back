@@ -975,6 +975,23 @@ Authorization: Bearer {{adminToken}}
 # GET {{baseUrl}}/v1/documents?page=1&limit=10
 # Authorization: Bearer {{adminToken}}
 
+### POST - Crear documento standalone (sin entidad asociada)
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/documents
+# Authorization: Bearer {{adminToken}}
+# Content-Type: multipart/form-data
+#
+# files: @./documento-test.pdf
+
+### POST - Crear documento con entityType sin entityId - Deberia fallar (422)
+# Requiere: @adminToken
+# POST {{baseUrl}}/v1/documents
+# Authorization: Bearer {{adminToken}}
+# Content-Type: multipart/form-data
+#
+# entityType: client
+# files: @./documento-test.pdf
+
 ### PATCH - Toggle isVisible de un documento (SOLO ADMIN)
 # Requiere: @adminToken
 # Requiere: cambiar @targetDocumentId por el ID real del documento

@@ -231,10 +231,10 @@ model Event {
 
 model Document {
   id         Int      @id @default(autoincrement())
-  entityType String   @map("entity_type")
-  entityId   Int      @map("entity_id")
+  entityType String?  @map("entity_type")
+  entityId   Int?     @map("entity_id")
   name       String
-  type       String
+  type       String?
   url        String
   size       Int?
   user       String

@@ -135,17 +135,21 @@ export class DocumentService {
   }
 
   async createDocument(
-    entityType: string,
-    entityId: number,
-    file: UploadFile,
-    user: string,
+    entityType?: string,
+    entityId?: number,
+    file?: UploadFile,
+    user?: string,
     documentType?: string
   ): Promise<DocumentResponse> {
-    this.logger.info(`Creating document for ${entityType}/${entityId}`);
+    this.logger.info(`Creating document for ${entityType || 'standalone'}/${entityId || 'standalone'}`);
 
-    await this.validateEntityExists(entityType, entityId);
+    if (entityType && entityId) {
+      await this.validateEntityExists(entityType, entityId);
+    }
 
-    const storedFile = await this.fileStorage.upload(`${entityType}s`, entityId, file);
+    const storedFile = entityType && entityId
+      ? await this.fileStorage.upload(`${entityType}s`, entityId, file)
+      : await this.fileStorage.uploadToFolder('documents', file);
 
     const doc = await this.documentDataSource.create({
       entityType,

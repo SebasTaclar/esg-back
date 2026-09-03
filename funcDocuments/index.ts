@@ -155,14 +155,13 @@ const funcDocuments = async (
     const { fields, files } = parsedData;
 
     const errors: string[] = [];
-    if (!fields.entityType) errors.push('entityType is required');
-    if (!fields.entityId) errors.push('entityId is required');
     if (files.length === 0) errors.push('At least one file is required');
+    if (fields.entityType && !fields.entityId) errors.push('entityId is required when entityType is provided');
     if (errors.length > 0) return ApiResponseBuilder.validationError(errors);
 
     const doc = await documentService.createDocument(
-      fields.entityType,
-      parseInt(fields.entityId, 10),
+      fields.entityType || undefined,
+      fields.entityId ? parseInt(fields.entityId, 10) : undefined,
       files[0],
       user.email,
       fields.type

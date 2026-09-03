@@ -42,10 +42,10 @@ export class DocumentPrismaAdapter implements IDocumentDataSource {
   }
 
   async create(data: {
-    entityType: string;
-    entityId: number;
+    entityType?: string;
+    entityId?: number;
     name: string;
-    type: string;
+    type?: string;
     url: string;
     size?: number;
     user: string;
@@ -53,10 +53,10 @@ export class DocumentPrismaAdapter implements IDocumentDataSource {
   }): Promise<Document> {
     return await this.prisma.document.create({
       data: {
-        entityType: data.entityType,
-        entityId: data.entityId,
+        entityType: data.entityType ?? null,
+        entityId: data.entityId ?? null,
         name: data.name,
-        type: data.type,
+        type: data.type ?? null,
         url: data.url,
         size: data.size || null,
         user: data.user,

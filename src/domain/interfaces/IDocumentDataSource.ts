@@ -5,10 +5,10 @@ export interface IDocumentDataSource {
   getByEntity(entityType: string, entityId: number): Promise<Document[]>;
   getById(id: number): Promise<Document | null>;
   create(data: {
-    entityType: string;
-    entityId: number;
+    entityType?: string;
+    entityId?: number;
     name: string;
-    type: string;
+    type?: string;
     url: string;
     size?: number;
     user: string;
