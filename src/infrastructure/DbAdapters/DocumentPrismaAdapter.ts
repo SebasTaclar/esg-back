@@ -65,6 +65,17 @@ export class DocumentPrismaAdapter implements IDocumentDataSource {
     });
   }
 
+  async update(id: number, data: {
+    name?: string;
+    type?: string;
+    isVisible?: boolean;
+  }): Promise<Document> {
+    return await this.prisma.document.update({
+      where: { id },
+      data,
+    });
+  }
+
   async delete(id: number): Promise<void> {
     await this.prisma.document.delete({
       where: { id },

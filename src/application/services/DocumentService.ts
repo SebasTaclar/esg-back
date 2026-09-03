@@ -162,6 +162,21 @@ export class DocumentService {
     return this.toDocumentResponse(doc);
   }
 
+  async updateDocument(
+    id: number,
+    data: { name?: string; type?: string; isVisible?: boolean }
+  ): Promise<DocumentResponse> {
+    this.logger.info(`Updating document ${id}`);
+
+    const doc = await this.documentDataSource.getById(id);
+    if (!doc) {
+      throw new NotFoundError(`Document with ID ${id} not found`);
+    }
+
+    const updated = await this.documentDataSource.update(id, data);
+    return this.toDocumentResponse(updated);
+  }
+
   async deleteDocument(id: number): Promise<void> {
     this.logger.info(`Deleting document ${id}`);
 

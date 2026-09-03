@@ -14,5 +14,10 @@ export interface IDocumentDataSource {
     user: string;
     isVisible?: boolean;
   }): Promise<Document>;
+  update(id: number, data: {
+    name?: string;
+    type?: string;
+    isVisible?: boolean;
+  }): Promise<Document>;
   delete(id: number): Promise<void>;
 }

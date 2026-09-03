@@ -240,6 +240,7 @@ model Document {
   user       String
   isVisible  Boolean  @default(false) @map("is_visible")
   createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
 
   @@index([entityType, entityId], map: "idx_documents_entity")
   @@index([isVisible], map: "idx_documents_is_visible")

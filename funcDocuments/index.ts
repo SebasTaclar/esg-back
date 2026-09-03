@@ -171,6 +171,29 @@ const funcDocuments = async (
     return { success: true, message: 'Document created successfully', data: doc, timestamp: new Date().toISOString(), statusCode: 201 };
   }
 
+  if (method === 'PATCH' && id) {
+    logger.info(`PATCH /documents/${id}`);
+    if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid document ID');
+
+    const body = req.body as Record<string, unknown>;
+    const allowedFields: Record<string, string> = {};
+    if (body.name !== undefined) allowedFields.name = body.name as string;
+    if (body.type !== undefined) allowedFields.type = body.type as string;
+    if (body.isVisible !== undefined) allowedFields.isVisible = body.isVisible as unknown as string;
+
+    if (Object.keys(allowedFields).length === 0) {
+      return ApiResponseBuilder.badRequest('No valid fields to update. Allowed: name, type, isVisible');
+    }
+
+    const updateData: { name?: string; type?: string; isVisible?: boolean } = {};
+    if (allowedFields.name !== undefined) updateData.name = allowedFields.name;
+    if (allowedFields.type !== undefined) updateData.type = allowedFields.type;
+    if (allowedFields.isVisible !== undefined) updateData.isVisible = allowedFields.isVisible === 'true';
+
+    const doc = await documentService.updateDocument(id, updateData);
+    return ApiResponseBuilder.success(doc, 'Document updated successfully');
+  }
+
   if (method === 'DELETE' && id) {
     logger.info(`DELETE /documents/${id}`);
     if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid document ID');
