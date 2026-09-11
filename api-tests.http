@@ -94,15 +94,17 @@ Authorization: Bearer {{superadminToken}}
   "role": "user"
 }
 
-### Crear Admin (SOLO SUPERADMIN puede crear admins)
+### Crear Admin (SOLO SUPERADMIN puede crear admins) - Sin clientId
 # Requiere: @superadminToken del loginSuperAdmin
+# Los admin NO estan asociados a ningun clientId
 POST {{baseUrl}}/v1/user/create
 Content-Type: application/json
 Authorization: Bearer {{superadminToken}}
 
 {
-  "clientId": "@targetClientId",
-  "password": "admin123",
+  "email": "gerenciatecnica@esgestionempresarial.com",
+  "name": "Eduardo Salcedo",
+  "password": "Eduardo123*",
   "role": "admin"
 }
 
@@ -212,6 +214,69 @@ Authorization: Bearer {{superadminToken}}
 {
   "clientId": "@targetClientId",
   "password": "123"
+}
+
+### Crear SuperAdmin (SOLO SUPERADMIN) - Sin clientId
+# Requiere: @superadminToken del loginSuperAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{superadminToken}}
+
+{
+  "email": "superadmin@esg.com",
+  "name": "Super Admin Test",
+  "password": "Super123!",
+  "role": "superadmin"
+}
+
+### Crear Admin - Deberia fallar si no envia email (422)
+# Requiere: @superadminToken del loginSuperAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{superadminToken}}
+
+{
+  "name": "Admin Sin Email",
+  "password": "Admin123!",
+  "role": "admin"
+}
+
+### Crear Admin - Deberia fallar si no envia name (422)
+# Requiere: @superadminToken del loginSuperAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{superadminToken}}
+
+{
+  "email": "sinname@esg.com",
+  "password": "Admin123!",
+  "role": "admin"
+}
+
+### Crear User - Deberia fallar si no envia clientId (422)
+# Requiere: @superadminToken del loginSuperAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{superadminToken}}
+
+{
+  "email": "user@test.com",
+  "name": "User Sin Client",
+  "password": "User123!",
+  "role": "user"
+}
+
+### Crear Admin - Deberia fallar si admin intenta crear admin (403)
+# Requiere: @adminToken del loginAdmin
+POST {{baseUrl}}/v1/user/create
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "email": "otroadmin@esg.com",
+  "name": "Otro Admin",
+  "password": "Admin123!",
+  "role": "admin"
 }
 
 
@@ -576,7 +641,7 @@ Content-Type: application/json
 Authorization: Bearer {{adminToken}}
 
 {
-  "name": "Camila Rodriguez",
+  "name": "Camila Rodriguez",`
   "studies": "Ingeniera Ambiental - Universidad Nacional",
   "mainArea": "Gestion Ambiental",
   "city": "Bogota D.C.",
@@ -1258,9 +1323,9 @@ Authorization: Bearer {{adminToken}}
 # FLUJO DE USO:
 #   1. Ejecutar seed para crear superadmin (una sola vez: npm run db:seed)
 #   2. Login como superadmin -> copiar token en @superadminToken
-#   3. Crear admin con POST /v1/user/create (role: "admin")
+#   3. Crear admin con POST /v1/user/create (role: "admin", sin clientId, con email/name)
 #   4. Login como admin -> copiar token en @adminToken
-#   5. Crear usuarios cliente con POST /v1/user/create
+#   5. Crear usuarios cliente con POST /v1/user/create (role: "user", con clientId)
 #   6. Asociar clients a usuarios con PATCH /v1/clients/{id}/assign-user
 #   7. Login como cliente -> copiar token en @clientToken
 #   8. El cliente solo ve sus clients y registros con isVisible: true
@@ -1281,6 +1346,8 @@ Authorization: Bearer {{adminToken}}
 #
 # ENDPOINTS PROTEGIDOS POR ROL:
 #   POST /v1/user/create                -> superadmin y admin
+#     - role "user": requiere clientId (asocia usuario a cliente)
+#     - role "admin"/"superadmin"/"team": requiere email y name (sin clientId)
 #   PATCH /v1/user/change-password      -> superadmin y admin (con restricciones)
 #   DELETE /v1/users/{id}               -> superadmin y admin (con restricciones)
 #   GET /v1/users                       -> superadmin y admin

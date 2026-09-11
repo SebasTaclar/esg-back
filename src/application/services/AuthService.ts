@@ -22,9 +22,11 @@ export interface UserInfo {
 }
 
 export interface CreateUserRequest {
-  clientId: number;
+  clientId?: number;
   password: string;
   role?: string;
+  email?: string;
+  name?: string;
 }
 
 export class AuthService {
@@ -78,15 +80,11 @@ export class AuthService {
   }
 
   async createUser(createUserRequest: CreateUserRequest, requester: AuthenticatedUser): Promise<UserInfo> {
-    const { clientId, password, role } = createUserRequest;
-
-    this.logger.logInfo(`Creating user for client: ${clientId} by ${requester.email} (${requester.role})`);
-
-    if (!clientId || !password) {
-      throw new ValidationError('clientId and password are required');
-    }
+    const { clientId, password, role, email, name } = createUserRequest;
 
     const targetRole = role || USER_ROLES.USER;
+
+    this.logger.logInfo(`Creating user with role: ${targetRole} by ${requester.email} (${requester.role})`);
 
     if (!canCreateUserWithRole(requester, targetRole)) {
       this.logger.logWarning(
@@ -95,35 +93,52 @@ export class AuthService {
       throw new AuthorizationError('You do not have permission to create a user with this role');
     }
 
-    // Validate password requirements
+    if (!password) {
+      throw new ValidationError('Password is required');
+    }
+
     PasswordUtils.validatePassword(password);
 
-    // Lookup client
-    const targetClient = await this.clientDataSource.getById(clientId);
-    if (!targetClient) {
-      throw new ValidationError('Client not found');
+    let userEmail: string;
+    let userName: string;
+
+    if (targetRole === USER_ROLES.USER) {
+      if (!clientId) {
+        throw new ValidationError('clientId is required for role "user"');
+      }
+
+      const targetClient = await this.clientDataSource.getById(clientId);
+      if (!targetClient) {
+        throw new ValidationError('Client not found');
+      }
+
+      if (targetClient.userId) {
+        throw new ConflictError('Client already has a user assigned');
+      }
+
+      userEmail = targetClient.email;
+      userName = targetClient.name;
+    } else {
+      if (!email || !name) {
+        throw new ValidationError('email and name are required for admin/superadmin/team users');
+      }
+
+      userEmail = email;
+      userName = name;
     }
 
-    // Check if client already has a user assigned
-    if (targetClient.userId) {
-      throw new ConflictError('Client already has a user assigned');
-    }
-
-    // Check if a user with this email already exists
-    const existingUser = await this.userDataSource.getByEmail(targetClient.email);
+    const existingUser = await this.userDataSource.getByEmail(userEmail);
     if (existingUser) {
       throw new ConflictError('A user with this email already exists');
     }
 
-    // Hash password
     const hashedPassword = await PasswordUtils.hashPassword(password);
 
-    // Create user with client data
     const newUser = {
       id: 0,
-      email: targetClient.email,
+      email: userEmail,
       password: hashedPassword,
-      name: targetClient.name,
+      name: userName,
       role: targetRole,
       membershipPaid: false,
     };
@@ -131,11 +146,12 @@ export class AuthService {
     try {
       const createdUser = await this.userDataSource.create(newUser);
 
-      // Link client to user
-      await this.clientDataSource.update(clientId, { userId: createdUser.id });
-      this.logger.logInfo(`Client ${clientId} linked to user ${createdUser.id}`);
+      if (targetRole === USER_ROLES.USER && clientId) {
+        await this.clientDataSource.update(clientId, { userId: createdUser.id });
+        this.logger.logInfo(`Client ${clientId} linked to user ${createdUser.id}`);
+      }
 
-      this.logger.logInfo(`User created successfully: ${targetClient.email}`);
+      this.logger.logInfo(`User created successfully: ${userEmail}`);
 
       return {
         id: createdUser.id.toString(),
@@ -145,7 +161,7 @@ export class AuthService {
         membershipPaid: createdUser.membershipPaid,
       };
     } catch (error) {
-      this.logger.logError(`Error creating user for client ${clientId}`, error);
+      this.logger.logError(`Error creating user ${userEmail}`, error);
       throw error;
     }
   }
