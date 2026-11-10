@@ -38,6 +38,7 @@ model Purchase {
   currency                  String        @default("COP")
   paymentProvider           String?       @map("payment_provider")
   wompiTransactionId        String?       @map("wompi_transaction_id")
+  extraData                 Json?         @map("extra_data")
   createdAt                 DateTime      @default(now()) @map("created_at")
   updatedAt                 DateTime      @updatedAt @map("updated_at")
   orderDetails              OrderDetail[]
@@ -81,6 +82,7 @@ model Product {
   colors        String?
   isShowcase    Boolean  @default(false) @map("is_showcase")
   showcaseImage String?  @map("showcase_image")
+  extraData     Json?    @map("extra_data")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   category      Category @relation(fields: [categoryId], references: [id])
@@ -110,6 +112,7 @@ model Client {
   isVisible        Boolean   @default(false) @map("is_visible")
   contacts         Json?
   resources        Json?
+  extraData        Json?     @map("extra_data")
   userId           Int?      @map("user_id")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
@@ -137,9 +140,16 @@ model Project {
   endDate      DateTime? @map("end_date")
   description  String
   observations String?
-  offer        String?
-  totalCost    Decimal?  @map("total_cost") @db.Decimal(12, 2)
-  services     Json?
+  offer                  String?
+  totalCost              Decimal?  @map("total_cost") @db.Decimal(12, 2)
+  invoiceNumber          String?   @map("invoice_number")
+  invoiceIssueDate       DateTime? @map("invoice_issue_date")
+  projectedPaymentDate   DateTime? @map("projected_payment_date")
+  actualPaymentDate      DateTime? @map("actual_payment_date")
+  purchaseOrderNumber    String?   @map("purchase_order_number")
+  purchaseOrderDate      DateTime? @map("purchase_order_date")
+  services               Json?
+  extraData              Json?     @map("extra_data")
   isVisible    Boolean   @default(false) @map("is_visible")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
@@ -163,6 +173,7 @@ model Quote {
   validUntil   DateTime? @map("valid_until")
   observations String?
   services     Json
+  extraData    Json?     @map("extra_data")
   isVisible    Boolean   @default(false) @map("is_visible")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
@@ -187,8 +198,12 @@ model Tender {
   status          String
   publicationDate DateTime  @map("publication_date")
   closingDate     DateTime? @map("closing_date")
-  estimatedValue  Decimal?  @map("estimated_value") @db.Decimal(12, 2)
-  serviceItems    Json?     @map("service_items")
+  estimatedValue     Decimal?  @map("estimated_value") @db.Decimal(12, 2)
+  officialBudget     Decimal?  @map("official_budget") @db.Decimal(15, 2)
+  offerEstimatedValue Decimal? @map("offer_estimated_value") @db.Decimal(15, 2)
+  projectClosingDate DateTime? @map("project_closing_date")
+  serviceItems       Json?     @map("service_items")
+  extraData          Json?     @map("extra_data")
   observations    String?
   isVisible       Boolean   @default(false) @map("is_visible")
   createdAt       DateTime  @default(now()) @map("created_at")
@@ -220,6 +235,7 @@ model Event {
   coAuditors      String?   @map("co_auditors")
   normas          String?
   description     String?
+  extraData       Json?     @map("extra_data")
   isVisible       Boolean   @default(false) @map("is_visible")
   createdAt       DateTime  @default(now()) @map("created_at")
 
@@ -237,6 +253,7 @@ model Document {
   type       String?
   url        String
   size       Int?
+  extraData  Json?     @map("extra_data")
   user       String
   isVisible  Boolean  @default(false) @map("is_visible")
   createdAt  DateTime @default(now()) @map("created_at")
@@ -275,6 +292,7 @@ model Collaborator {
   status       String   @default("available")
   competencies Json?
   documents    Json?
+  extraData    Json? @map("extra_data")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

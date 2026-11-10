@@ -8,6 +8,7 @@ interface UpdatePurchaseRequest {
   buyerEmail?: string;
   buyerName?: string;
   buyerContactNumber?: string;
+  extraData?: unknown;
 }
 
 const funcUpdatePurchase = async (
@@ -37,7 +38,7 @@ const funcUpdatePurchase = async (
     const { buyerEmail, buyerName, buyerContactNumber }: UpdatePurchaseRequest = req.body;
 
     // Validar que al menos un campo sea proporcionado
-    if (!buyerEmail && !buyerName && !buyerContactNumber) {
+    if (!buyerEmail && !buyerName && !buyerContactNumber && !req.body?.extraData) {
       return ApiResponseBuilder.validationError([
         'At least one field must be provided: buyerEmail, buyerName, or buyerContactNumber',
       ]);
@@ -74,6 +75,7 @@ const funcUpdatePurchase = async (
     if (buyerEmail !== undefined) updateData.buyerEmail = buyerEmail;
     if (buyerName !== undefined) updateData.buyerName = buyerName;
     if (buyerContactNumber !== undefined) updateData.buyerContactNumber = buyerContactNumber;
+    if (req.body?.extraData !== undefined) updateData.extraData = req.body.extraData;
 
     // Obtener el servicio de compras y ejecutar la actualización
     const purchaseService = getPurchaseService();

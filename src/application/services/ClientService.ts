@@ -1,7 +1,7 @@
 import { NotFoundError, ConflictError } from '../../shared/exceptions';
 import { Logger } from '../../shared/Logger';
 import { IClientDataSource, Contact, Resource } from '../../domain/interfaces/IClientDataSource';
-import { Decimal } from '@prisma/client/runtime/library';
+
 import { Client } from '@prisma/client';
 
 export interface ClientRequest {
@@ -24,6 +24,7 @@ export interface ClientRequest {
   resources?: Resource[];
   userId?: number;
   isVisible?: boolean;
+  extraData?: unknown;
 }
 
 export interface ClientResponse {
@@ -47,6 +48,7 @@ export interface ClientResponse {
   contacts?: Contact[] | null;
   resources?: Resource[] | null;
   userId?: number | null;
+  extraData?: unknown;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -70,6 +72,7 @@ export interface UpdateClientRequest {
   contacts?: Contact[];
   resources?: Resource[];
   isVisible?: boolean;
+  extraData?: unknown;
 }
 
 function toClientResponse(client: Client): ClientResponse {
@@ -94,6 +97,7 @@ function toClientResponse(client: Client): ClientResponse {
     contacts: (client.contacts as Contact[]) || null,
     resources: (client.resources as Resource[]) || null,
     userId: client.userId,
+    extraData: client.extraData,
     createdAt: client.createdAt,
     updatedAt: client.updatedAt,
   };
@@ -136,6 +140,7 @@ export class ClientService {
       resources: data.resources,
       userId: data.userId,
       isVisible: data.isVisible,
+      extraData: data.extraData,
     });
 
     this.logger.info(`Client created with ID: ${client.id}`);

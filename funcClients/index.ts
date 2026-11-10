@@ -98,6 +98,7 @@ const funcClients = async (
       contacts: body.contacts as ClientRequest['contacts'],
       resources: body.resources as ClientRequest['resources'],
       userId: isAdmin(user) ? (body.userId as number) : undefined,
+      extraData: body.extraData,
     };
 
     const client = await clientService.createClient(clientRequest);
@@ -132,6 +133,7 @@ const funcClients = async (
       showResources: body.showResources !== undefined ? Boolean(body.showResources) : undefined,
       contacts: body.contacts as UpdateClientRequest['contacts'],
       resources: body.resources as UpdateClientRequest['resources'],
+      extraData: body.extraData,
     };
 
     const client = await clientService.updateClient(id, updateRequest);

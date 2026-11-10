@@ -3,7 +3,7 @@ import { Logger } from '../../shared/Logger';
 import { ITenderDataSource } from '../../domain/interfaces/ITenderDataSource';
 import { TenderRequest, TenderResponse, UpdateTenderRequest, TenderServiceItem } from '../../domain/entities/Tender';
 import { Tender } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+
 
 function toTenderResponse(tender: Tender): TenderResponse {
   return {
@@ -18,9 +18,13 @@ function toTenderResponse(tender: Tender): TenderResponse {
     publicationDate: tender.publicationDate,
     closingDate: tender.closingDate,
     estimatedValue: tender.estimatedValue,
+    officialBudget: tender.officialBudget,
+    offerEstimatedValue: tender.offerEstimatedValue,
+    projectClosingDate: tender.projectClosingDate,
     serviceItems: tender.serviceItems as TenderServiceItem[] | null,
     observations: tender.observations,
     isVisible: tender.isVisible,
+    extraData: tender.extraData,
     createdAt: tender.createdAt,
     updatedAt: tender.updatedAt,
   };
@@ -73,9 +77,13 @@ export class TenderService {
       publicationDate: request.publicationDate,
       closingDate: request.closingDate,
       estimatedValue: request.estimatedValue,
+      officialBudget: request.officialBudget,
+      offerEstimatedValue: request.offerEstimatedValue,
+      projectClosingDate: request.projectClosingDate,
       serviceItems: request.serviceItems,
       observations: request.observations,
       isVisible: request.isVisible,
+      extraData: request.extraData,
     });
 
     this.logger.info(`Tender created with ID: ${tender.id}`);
@@ -101,9 +109,13 @@ export class TenderService {
       publicationDate: request.publicationDate,
       closingDate: request.closingDate,
       estimatedValue: request.estimatedValue,
+      officialBudget: request.officialBudget,
+      offerEstimatedValue: request.offerEstimatedValue,
+      projectClosingDate: request.projectClosingDate,
       serviceItems: request.serviceItems,
       observations: request.observations,
       isVisible: request.isVisible,
+      extraData: request.extraData,
     });
 
     this.logger.info(`Tender ${id} updated successfully`);

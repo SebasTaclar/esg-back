@@ -5,7 +5,7 @@ import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
 import { AuthenticatedUser } from '../src/shared/authMiddleware';
-import { isAdmin, isClient } from '../src/shared/roleMiddleware';
+import { isClient } from '../src/shared/roleMiddleware';
 
 const funcTenders = async (
   _context: Context,
@@ -80,9 +80,13 @@ const funcTenders = async (
       publicationDate: body.publicationDate as string,
       closingDate: body.closingDate as string,
       estimatedValue: body.estimatedValue as number,
+      officialBudget: body.officialBudget as number,
+      offerEstimatedValue: body.offerEstimatedValue as number,
+      projectClosingDate: body.projectClosingDate as string,
       serviceItems: body.serviceItems as TenderServiceItem[],
       observations: body.observations as string,
       isVisible: body.isVisible as boolean,
+      extraData: body.extraData,
     };
 
     const tender = await tenderService.createTender(tenderRequest);
@@ -105,9 +109,13 @@ const funcTenders = async (
       publicationDate: body.publicationDate as string,
       closingDate: body.closingDate as string,
       estimatedValue: body.estimatedValue as number,
+      officialBudget: body.officialBudget as number,
+      offerEstimatedValue: body.offerEstimatedValue as number,
+      projectClosingDate: body.projectClosingDate as string,
       serviceItems: body.serviceItems as TenderServiceItem[],
       observations: body.observations as string,
       isVisible: body.isVisible as boolean,
+      extraData: body.extraData,
     };
 
     const tender = await tenderService.updateTender(id, updateRequest);

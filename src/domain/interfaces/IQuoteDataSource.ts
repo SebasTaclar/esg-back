@@ -24,6 +24,7 @@ export interface IQuoteDataSource {
     observations?: string;
     services: QuoteService[];
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Quote>;
   update(
     id: number,
@@ -36,10 +37,11 @@ export interface IQuoteDataSource {
       totalAmount?: number;
       validUntil?: string;
       observations?: string;
-      services?: QuoteService[];
-      isVisible?: boolean;
-    }
-  ): Promise<Quote>;
+    services?: QuoteService[];
+    isVisible?: boolean;
+    extraData?: unknown;
+  }
+): Promise<Quote>;
   delete(id: number): Promise<void>;
   search(query: string, page: number, limit: number): Promise<{ quotes: Quote[]; total: number }>;
 }

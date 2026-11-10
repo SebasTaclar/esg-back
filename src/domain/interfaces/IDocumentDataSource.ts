@@ -13,11 +13,13 @@ export interface IDocumentDataSource {
     size?: number;
     user: string;
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Document>;
   update(id: number, data: {
     name?: string;
     type?: string;
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Document>;
   delete(id: number): Promise<void>;
 }

@@ -10,6 +10,7 @@ export type Product = {
   colors?: string[]; // Array de colores
   isShowcase: boolean;
   showcaseImage?: string;
+  extraData?: unknown;
   createdAt?: Date;
   updatedAt?: Date;
 

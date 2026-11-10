@@ -1,7 +1,7 @@
 import { getPrismaClient } from '../../config/PrismaClient';
 import { IProductDataSource } from '../../domain/interfaces/IProductDataSource';
 import { Product } from '../../domain/entities/Product';
-import { Prisma } from '@prisma/client';
+import { Prisma, Product as PrismaProduct } from '@prisma/client';
 
 export class ProductPrismaAdapter implements IProductDataSource {
   private readonly prisma = getPrismaClient();
@@ -121,6 +121,7 @@ export class ProductPrismaAdapter implements IProductDataSource {
         colors: product.colors ? JSON.stringify(product.colors) : null,
         isShowcase: product.isShowcase,
         showcaseImage: product.showcaseImage,
+        extraData: product.extraData as Prisma.InputJsonValue,
       },
       include: {
         category: {
@@ -153,6 +154,7 @@ export class ProductPrismaAdapter implements IProductDataSource {
           }),
           ...(product.isShowcase !== undefined && { isShowcase: product.isShowcase }),
           ...(product.showcaseImage !== undefined && { showcaseImage: product.showcaseImage }),
+          ...(product.extraData !== undefined && { extraData: product.extraData as Prisma.InputJsonValue }),
         },
         include: {
           category: {
@@ -192,7 +194,7 @@ export class ProductPrismaAdapter implements IProductDataSource {
     }
   }
 
-  private mapToProduct(prismaProduct: any): Product {
+  private mapToProduct(prismaProduct: PrismaProduct & { category?: { id: number; name: string; description: string | null } }): Product {
     return {
       id: prismaProduct.id,
       name: prismaProduct.name,
@@ -207,6 +209,7 @@ export class ProductPrismaAdapter implements IProductDataSource {
       colors: prismaProduct.colors ? JSON.parse(prismaProduct.colors) : undefined,
       isShowcase: prismaProduct.isShowcase,
       showcaseImage: prismaProduct.showcaseImage,
+      extraData: prismaProduct.extraData,
       createdAt: prismaProduct.createdAt,
       updatedAt: prismaProduct.updatedAt,
       category: prismaProduct.category

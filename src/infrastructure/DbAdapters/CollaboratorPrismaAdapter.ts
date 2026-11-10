@@ -41,6 +41,7 @@ export class CollaboratorPrismaAdapter implements ICollaboratorDataSource {
     status?: string;
     competencies?: unknown;
     documents?: unknown;
+    extraData?: unknown;
   }): Promise<Collaborator> {
     return await this.prisma.collaborator.create({
       data: {
@@ -53,6 +54,7 @@ export class CollaboratorPrismaAdapter implements ICollaboratorDataSource {
         status: data.status || 'available',
         competencies: (data.competencies as Prisma.InputJsonValue) || null,
         documents: (data.documents as Prisma.InputJsonValue) || null,
+        extraData: (data.extraData as Prisma.InputJsonValue) || null,
       },
     });
   }
@@ -67,10 +69,11 @@ export class CollaboratorPrismaAdapter implements ICollaboratorDataSource {
       phone?: string;
       email?: string;
       status?: string;
-      competencies?: unknown;
-      documents?: unknown;
-    }
-  ): Promise<Collaborator> {
+    competencies?: unknown;
+    documents?: unknown;
+    extraData?: unknown;
+  }
+): Promise<Collaborator> {
     const updateData: Record<string, unknown> = {};
 
     if (data.name !== undefined) updateData.name = data.name;
@@ -82,6 +85,7 @@ export class CollaboratorPrismaAdapter implements ICollaboratorDataSource {
     if (data.status !== undefined) updateData.status = data.status;
     if (data.competencies !== undefined) updateData.competencies = data.competencies as Prisma.InputJsonValue;
     if (data.documents !== undefined) updateData.documents = data.documents as Prisma.InputJsonValue;
+    if (data.extraData !== undefined) updateData.extraData = data.extraData as Prisma.InputJsonValue;
 
     return await this.prisma.collaborator.update({
       where: { id },

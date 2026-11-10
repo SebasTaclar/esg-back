@@ -1,4 +1,4 @@
-import { NotFoundError, ConflictError } from '../../shared/exceptions';
+import { NotFoundError } from '../../shared/exceptions';
 import { Logger } from '../../shared/Logger';
 import { ICollaboratorDataSource } from '../../domain/interfaces/ICollaboratorDataSource';
 import { Collaborator } from '@prisma/client';
@@ -13,6 +13,7 @@ export interface CollaboratorRequest {
   status?: string;
   competencies?: unknown;
   documents?: unknown;
+  extraData?: unknown;
 }
 
 export interface CollaboratorResponse {
@@ -26,6 +27,7 @@ export interface CollaboratorResponse {
   status: string;
   competencies?: unknown;
   documents?: unknown;
+  extraData?: unknown;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +42,7 @@ export interface UpdateCollaboratorRequest {
   status?: string;
   competencies?: unknown;
   documents?: unknown;
+  extraData?: unknown;
 }
 
 function toCollaboratorResponse(collaborator: Collaborator): CollaboratorResponse {
@@ -54,6 +57,7 @@ function toCollaboratorResponse(collaborator: Collaborator): CollaboratorRespons
     status: collaborator.status,
     competencies: collaborator.competencies,
     documents: collaborator.documents,
+    extraData: collaborator.extraData,
     createdAt: collaborator.createdAt,
     updatedAt: collaborator.updatedAt,
   };
@@ -81,6 +85,7 @@ export class CollaboratorService {
       status: data.status,
       competencies: data.competencies,
       documents: data.documents,
+      extraData: data.extraData,
     });
 
     this.logger.info(`Collaborator created with ID: ${collaborator.id}`);

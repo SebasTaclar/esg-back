@@ -1,6 +1,6 @@
 import { getPrismaClient } from '../../config/PrismaClient';
 import { IDocumentDataSource } from '../../domain/interfaces/IDocumentDataSource';
-import { Document } from '@prisma/client';
+import { Document, Prisma } from '@prisma/client';
 
 export class DocumentPrismaAdapter implements IDocumentDataSource {
   private prisma = getPrismaClient();
@@ -50,6 +50,7 @@ export class DocumentPrismaAdapter implements IDocumentDataSource {
     size?: number;
     user: string;
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Document> {
     return await this.prisma.document.create({
       data: {
@@ -61,6 +62,7 @@ export class DocumentPrismaAdapter implements IDocumentDataSource {
         size: data.size || null,
         user: data.user,
         isVisible: data.isVisible ?? false,
+        extraData: data.extraData as Prisma.InputJsonValue,
       },
     });
   }
@@ -69,10 +71,11 @@ export class DocumentPrismaAdapter implements IDocumentDataSource {
     name?: string;
     type?: string;
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Document> {
     return await this.prisma.document.update({
       where: { id },
-      data,
+      data: data as Prisma.DocumentUpdateInput,
     });
   }
 

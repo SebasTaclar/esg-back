@@ -1,6 +1,6 @@
 import { getPrismaClient } from '../../config/PrismaClient';
 import { IEventDataSource } from '../../domain/interfaces/IEventDataSource';
-import { Event } from '@prisma/client';
+import { Event, Prisma } from '@prisma/client';
 
 export class EventPrismaAdapter implements IEventDataSource {
   private prisma = getPrismaClient();
@@ -61,10 +61,11 @@ export class EventPrismaAdapter implements IEventDataSource {
       userOtro?: string;
       leadAuditor?: string;
       coAuditors?: string;
-      normas?: string;
-      isVisible?: boolean;
-    }
-  ): Promise<Event> {
+    normas?: string;
+    isVisible?: boolean;
+    extraData?: unknown;
+  }
+): Promise<Event> {
     const updateData: Record<string, unknown> = {};
 
     if (data.title !== undefined) updateData.title = data.title;
@@ -85,6 +86,7 @@ export class EventPrismaAdapter implements IEventDataSource {
     if (data.leadAuditor !== undefined) updateData.leadAuditor = data.leadAuditor;
     if (data.coAuditors !== undefined) updateData.coAuditors = data.coAuditors;
     if (data.normas !== undefined) updateData.normas = data.normas;
+    if (data.extraData !== undefined) updateData.extraData = data.extraData;
     if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
 
     return await this.prisma.event.update({
@@ -113,6 +115,7 @@ export class EventPrismaAdapter implements IEventDataSource {
     coAuditors?: string;
     normas?: string;
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Event> {
     return await this.prisma.event.create({
       data: {
@@ -135,6 +138,7 @@ export class EventPrismaAdapter implements IEventDataSource {
         coAuditors: data.coAuditors,
         normas: data.normas,
         isVisible: data.isVisible ?? false,
+        extraData: data.extraData as Prisma.InputJsonValue,
       },
     });
   }

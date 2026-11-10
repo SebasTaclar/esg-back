@@ -20,6 +20,7 @@ export type EventRequest = {
   coAuditors?: string;
   normas?: string;
   isVisible?: boolean;
+  extraData?: unknown;
 };
 
 export type UpdateEventRequest = {
@@ -42,6 +43,7 @@ export type UpdateEventRequest = {
   coAuditors?: string;
   normas?: string;
   isVisible?: boolean;
+  extraData?: unknown;
 };
 
 export type EventResponse = {
@@ -65,5 +67,6 @@ export type EventResponse = {
   coAuditors?: string | null;
   normas?: string | null;
   isVisible: boolean;
+  extraData?: unknown;
   createdAt: Date;
 };

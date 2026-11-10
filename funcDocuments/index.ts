@@ -4,8 +4,7 @@ import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
 import { AuthenticatedUser } from '../src/shared/authMiddleware';
-import { verifyToken } from '../src/shared/jwtHelper';
-import { isAdmin, isClient } from '../src/shared/roleMiddleware';
+import { isClient } from '../src/shared/roleMiddleware';
 import { UploadFile } from '../src/domain/entities/StoredFile';
 import Busboy from 'busboy';
 
@@ -175,10 +174,11 @@ const funcDocuments = async (
     if (isNaN(id)) return ApiResponseBuilder.badRequest('Invalid document ID');
 
     const body = req.body as Record<string, unknown>;
-    const updateData: { name?: string; type?: string; isVisible?: boolean } = {};
+    const updateData: { name?: string; type?: string; isVisible?: boolean; extraData?: unknown } = {};
     if (body.name !== undefined) updateData.name = body.name as string;
     if (body.type !== undefined) updateData.type = body.type as string;
     if (body.isVisible !== undefined) updateData.isVisible = body.isVisible === true || body.isVisible === 'true';
+    if (body.extraData !== undefined) updateData.extraData = body.extraData;
 
     if (Object.keys(updateData).length === 0) {
       return ApiResponseBuilder.badRequest('No valid fields to update. Allowed: name, type, isVisible');

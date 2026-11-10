@@ -13,6 +13,7 @@ export interface ICollaboratorDataSource {
     status?: string;
     competencies?: unknown;
     documents?: unknown;
+    extraData?: unknown;
   }): Promise<Collaborator>;
   update(
     id: number,
@@ -24,10 +25,11 @@ export interface ICollaboratorDataSource {
       phone?: string;
       email?: string;
       status?: string;
-      competencies?: unknown;
-      documents?: unknown;
-    }
-  ): Promise<Collaborator>;
+    competencies?: unknown;
+    documents?: unknown;
+    extraData?: unknown;
+  }
+): Promise<Collaborator>;
   delete(id: number): Promise<void>;
   search(query: string, page: number, limit: number): Promise<{ collaborators: Collaborator[]; total: number }>;
 }

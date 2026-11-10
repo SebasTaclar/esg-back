@@ -43,9 +43,13 @@ export type TenderRequest = {
   publicationDate: string;
   closingDate?: string;
   estimatedValue?: number;
+  officialBudget?: number;
+  offerEstimatedValue?: number;
+  projectClosingDate?: string;
   serviceItems?: TenderServiceItem[];
   observations?: string;
   isVisible?: boolean;
+  extraData?: unknown;
 };
 
 export type TenderResponse = {
@@ -60,9 +64,13 @@ export type TenderResponse = {
   publicationDate: Date;
   closingDate?: Date | null;
   estimatedValue?: Decimal | number | null;
+  officialBudget?: Decimal | number | null;
+  offerEstimatedValue?: Decimal | number | null;
+  projectClosingDate?: Date | null;
   serviceItems?: TenderServiceItem[] | null;
   observations?: string | null;
   isVisible: boolean;
+  extraData?: unknown;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -78,7 +86,11 @@ export type UpdateTenderRequest = {
   publicationDate?: string;
   closingDate?: string;
   estimatedValue?: number;
+  officialBudget?: number;
+  offerEstimatedValue?: number;
+  projectClosingDate?: string;
   serviceItems?: TenderServiceItem[];
   observations?: string;
   isVisible?: boolean;
+  extraData?: unknown;
 };

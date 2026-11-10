@@ -69,8 +69,15 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
     observations?: string;
     offer?: string;
     totalCost?: number;
+    invoiceNumber?: string;
+    invoiceIssueDate?: string;
+    projectedPaymentDate?: string;
+    actualPaymentDate?: string;
+    purchaseOrderNumber?: string;
+    purchaseOrderDate?: string;
     services?: ProjectServiceItem[];
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Project> {
     return await this.prisma.project.create({
       data: {
@@ -85,8 +92,15 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
         observations: data.observations || null,
         offer: data.offer || null,
         totalCost: data.totalCost || null,
+        invoiceNumber: data.invoiceNumber || null,
+        invoiceIssueDate: data.invoiceIssueDate ? new Date(data.invoiceIssueDate) : null,
+        projectedPaymentDate: data.projectedPaymentDate ? new Date(data.projectedPaymentDate) : null,
+        actualPaymentDate: data.actualPaymentDate ? new Date(data.actualPaymentDate) : null,
+        purchaseOrderNumber: data.purchaseOrderNumber || null,
+        purchaseOrderDate: data.purchaseOrderDate ? new Date(data.purchaseOrderDate) : null,
         services: (data.services as unknown as Prisma.InputJsonValue) || null,
         isVisible: data.isVisible ?? false,
+        extraData: (data.extraData as unknown as Prisma.InputJsonValue) || null,
       },
       include: { client: true },
     });
@@ -106,8 +120,15 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
       observations?: string;
       offer?: string;
       totalCost?: number;
+      invoiceNumber?: string;
+      invoiceIssueDate?: string;
+      projectedPaymentDate?: string;
+      actualPaymentDate?: string;
+      purchaseOrderNumber?: string;
+      purchaseOrderDate?: string;
       services?: ProjectServiceItem[];
       isVisible?: boolean;
+      extraData?: unknown;
     }
   ): Promise<Project> {
     const updateData: Record<string, unknown> = {};
@@ -123,7 +144,14 @@ export class ProjectPrismaAdapter implements IProjectDataSource {
     if (data.observations !== undefined) updateData.observations = data.observations;
     if (data.offer !== undefined) updateData.offer = data.offer;
     if (data.totalCost !== undefined) updateData.totalCost = data.totalCost;
+    if (data.invoiceNumber !== undefined) updateData.invoiceNumber = data.invoiceNumber;
+    if (data.invoiceIssueDate !== undefined) updateData.invoiceIssueDate = data.invoiceIssueDate ? new Date(data.invoiceIssueDate) : null;
+    if (data.projectedPaymentDate !== undefined) updateData.projectedPaymentDate = data.projectedPaymentDate ? new Date(data.projectedPaymentDate) : null;
+    if (data.actualPaymentDate !== undefined) updateData.actualPaymentDate = data.actualPaymentDate ? new Date(data.actualPaymentDate) : null;
+    if (data.purchaseOrderNumber !== undefined) updateData.purchaseOrderNumber = data.purchaseOrderNumber;
+    if (data.purchaseOrderDate !== undefined) updateData.purchaseOrderDate = data.purchaseOrderDate ? new Date(data.purchaseOrderDate) : null;
     if (data.services !== undefined) updateData.services = data.services as unknown as Prisma.InputJsonValue;
+    if (data.extraData !== undefined) updateData.extraData = data.extraData as unknown as Prisma.InputJsonValue;
     if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
 
     return await this.prisma.project.update({

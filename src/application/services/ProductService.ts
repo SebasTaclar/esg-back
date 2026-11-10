@@ -27,6 +27,7 @@ export interface CreateProductRequest {
   colors?: string[];
   isShowcase?: boolean;
   showcaseImage?: string;
+  extraData?: unknown;
 }
 
 export interface UpdateProductRequest {
@@ -40,6 +41,7 @@ export interface UpdateProductRequest {
   colors?: string[];
   isShowcase?: boolean;
   showcaseImage?: string;
+  extraData?: unknown;
 }
 
 export class ProductService {
@@ -187,6 +189,7 @@ export class ProductService {
         colors: createRequest.colors ? normalizeColors(createRequest.colors) : undefined,
         isShowcase: createRequest.isShowcase || false,
         showcaseImage: createRequest.showcaseImage,
+        extraData: createRequest.extraData,
       };
 
       const newProduct = await this.productDataSource.create(productData);

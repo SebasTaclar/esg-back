@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { WompiService } from '../../infrastructure/services/WompiService';
 import { Logger } from '../../shared/Logger';
 import { IOrderDetailDataSource } from '../../domain/interfaces/IOrderDetailDataSource';
@@ -27,6 +27,7 @@ export interface CreatePurchaseRequest {
   buyerIdentificationNumber: string;
   buyerContactNumber: string;
   shippingAddress?: string;
+  extraData?: unknown;
 
   // Items del carrito
   items: CartItem[];
@@ -81,6 +82,7 @@ interface FormattedPurchase {
     totalPrice: number;
     selectedColor?: string;
   }>;
+  extraData?: unknown;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -107,6 +109,7 @@ interface UpdatePurchaseData {
   buyerEmail?: string;
   buyerName?: string;
   buyerContactNumber?: string;
+  extraData?: unknown;
 }
 
 interface UpdatePurchaseResult {
@@ -120,6 +123,7 @@ interface PurchaseUpdateFields {
   buyerEmail?: string;
   buyerName?: string;
   buyerContactNumber?: string;
+  extraData?: unknown;
 }
 
 export class PurchaseService {
@@ -171,10 +175,11 @@ export class PurchaseService {
             orderStatus: 'PENDING',
             amount: Math.round(totalAmount), // Guardar en pesos, no en centavos
             currency: 'COP',
-            paymentProvider: 'WOMPI',
-            externalReference: externalReference,
-            preferenceId: '', // Se actualizará después
-          },
+             paymentProvider: 'WOMPI',
+             externalReference: externalReference,
+             preferenceId: '', // Se actualizará después
+             extraData: request.extraData as Prisma.InputJsonValue,
+           },
         });
 
         Logger.info('Purchase created in transaction', { purchaseId: purchase.id });
@@ -442,9 +447,10 @@ export class PurchaseService {
         amount: purchase.amount,
         currency: purchase.currency,
         mercadopagoPaymentId: purchase.mercadopagoPaymentId,
-        wompiTransactionId: purchase.wompiTransactionId,
-        externalReference: purchase.externalReference,
-        wallpaperNumbers: purchase.orderDetails.map((detail) => detail.productName), // Para compatibilidad (ahora nombres)
+         wompiTransactionId: purchase.wompiTransactionId,
+         externalReference: purchase.externalReference,
+         extraData: purchase.extraData,
+         wallpaperNumbers: purchase.orderDetails.map((detail) => detail.productName), // Para compatibilidad (ahora nombres)
         items: purchase.orderDetails.map((detail) => ({
           productName: detail.productName,
           quantity: detail.quantity,
@@ -490,9 +496,10 @@ export class PurchaseService {
         amount: purchase.amount,
         currency: purchase.currency,
         mercadopagoPaymentId: purchase.mercadopagoPaymentId,
-        wompiTransactionId: purchase.wompiTransactionId,
-        externalReference: purchase.externalReference,
-        wallpaperNumbers: purchase.orderDetails.map((detail) => detail.productName), // Para compatibilidad
+         wompiTransactionId: purchase.wompiTransactionId,
+         externalReference: purchase.externalReference,
+         extraData: purchase.extraData,
+         wallpaperNumbers: purchase.orderDetails.map((detail) => detail.productName), // Para compatibilidad
         items: purchase.orderDetails.map((detail) => ({
           productName: detail.productName,
           quantity: detail.quantity,
@@ -580,9 +587,10 @@ export class PurchaseService {
         amount: purchase.amount,
         currency: purchase.currency,
         mercadopagoPaymentId: purchase.mercadopagoPaymentId,
-        wompiTransactionId: purchase.wompiTransactionId,
-        externalReference: purchase.externalReference,
-        wallpaperNumbers: purchase.orderDetails.map((detail) => detail.productName), // Para compatibilidad
+         wompiTransactionId: purchase.wompiTransactionId,
+         externalReference: purchase.externalReference,
+         extraData: purchase.extraData,
+         wallpaperNumbers: purchase.orderDetails.map((detail) => detail.productName), // Para compatibilidad
         items: purchase.orderDetails.map((detail) => ({
           productName: detail.productName,
           quantity: detail.quantity,
@@ -694,16 +702,17 @@ export class PurchaseService {
       const dataToUpdate: PurchaseUpdateFields = { updatedAt: new Date() };
       if (updateData.buyerEmail) dataToUpdate.buyerEmail = updateData.buyerEmail;
       if (updateData.buyerName) dataToUpdate.buyerName = updateData.buyerName.trim();
-      if (updateData.buyerContactNumber)
-        dataToUpdate.buyerContactNumber = updateData.buyerContactNumber;
+       if (updateData.buyerContactNumber)
+         dataToUpdate.buyerContactNumber = updateData.buyerContactNumber;
+       if (updateData.extraData !== undefined) dataToUpdate.extraData = updateData.extraData as Prisma.InputJsonValue;
 
-      const updatedPurchase = await this.prisma.purchase.update({
-        where: { id: purchase.id },
-        data: dataToUpdate,
-        include: {
-          orderDetails: true,
-        },
-      });
+       const updatedPurchase = await this.prisma.purchase.update({
+         where: { id: purchase.id },
+         data: dataToUpdate as Prisma.PurchaseUpdateInput,
+         include: {
+           orderDetails: true,
+         },
+       });
 
       const formattedPurchase: FormattedPurchase = {
         id: updatedPurchase.id,
@@ -715,9 +724,10 @@ export class PurchaseService {
         amount: updatedPurchase.amount,
         currency: updatedPurchase.currency,
         mercadopagoPaymentId: updatedPurchase.mercadopagoPaymentId,
-        wompiTransactionId: updatedPurchase.wompiTransactionId,
-        externalReference: updatedPurchase.externalReference,
-        items: updatedPurchase.orderDetails.map((detail) => ({
+         wompiTransactionId: updatedPurchase.wompiTransactionId,
+         externalReference: updatedPurchase.externalReference,
+         extraData: updatedPurchase.extraData,
+         items: updatedPurchase.orderDetails.map((detail) => ({
           productName: detail.productName,
           quantity: detail.quantity,
           unitPrice: Number(detail.unitPrice),

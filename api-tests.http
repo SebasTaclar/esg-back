@@ -530,7 +530,8 @@ Authorization: Bearer {{adminToken}}
   "isActive": true,
   "isProspect": false,
   "userId": 2,
-  "isVisible": true
+  "isVisible": true,
+  "extraData": { "customField": "valor adicional" }
 }
 
 ### POST - Crear client (CLIENT automaticamente se asigna a si mismo)
@@ -720,6 +721,13 @@ Authorization: Bearer {{adminToken}}
   "startDate": "2025-02-15",
   "description": "Implementacion sistema de gestion de calidad",
   "totalCost": 9500000,
+  "invoiceNumber": "FAC-2025-001",
+  "invoiceIssueDate": "2025-02-20",
+  "projectedPaymentDate": "2025-03-15",
+  "actualPaymentDate": "2025-03-10",
+  "purchaseOrderNumber": "OC-2025-001",
+  "purchaseOrderDate": "2025-02-18",
+  "extraData": { "customField": "valor adicional" },
   "isVisible": false
 }
 
@@ -963,6 +971,10 @@ Authorization: Bearer {{adminToken}}
   "status": "publicada",
   "publicationDate": "2025-02-01",
   "estimatedValue": 4864412,
+  "officialBudget": 5000000,
+  "offerEstimatedValue": 4700000,
+  "projectClosingDate": "2025-03-31",
+  "extraData": { "customField": "valor adicional" },
   "isVisible": false
 }
 

@@ -78,8 +78,9 @@ const funcCreatePayment = async (
     buyerName: buyerName.trim(),
     buyerIdentificationNumber: buyerIdentificationNumber.trim(),
     buyerContactNumber: buyerContactNumber.trim(),
-    shippingAddress: shippingAddress?.trim(),
-    items: items.map((item: CartItem) => ({
+     shippingAddress: shippingAddress?.trim(),
+     extraData: (req.body as Record<string, unknown>)?.extraData,
+     items: items.map((item: CartItem) => ({
       productId: item.productId,
       quantity: item.quantity,
       selectedColor: item.selectedColor?.trim() || undefined,

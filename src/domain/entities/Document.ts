@@ -21,5 +21,6 @@ export type DocumentResponse = {
   size?: number | null;
   user: string;
   isVisible: boolean;
+  extraData?: unknown;
   createdAt: Date;
 };

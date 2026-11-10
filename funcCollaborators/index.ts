@@ -92,6 +92,7 @@ const funcCollaborators = async (
       status: body.status as string,
       competencies: body.competencies,
       documents: body.documents,
+      extraData: body.extraData,
     };
 
     const collaborator = await collaboratorService.createCollaborator(collaboratorRequest);
@@ -113,6 +114,7 @@ const funcCollaborators = async (
       status: body.status as string,
       competencies: body.competencies,
       documents: body.documents,
+      extraData: body.extraData,
     };
 
     const collaborator = await collaboratorService.updateCollaborator(id, updateRequest);

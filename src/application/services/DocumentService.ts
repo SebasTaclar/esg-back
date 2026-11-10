@@ -99,6 +99,7 @@ export class DocumentService {
       size: doc.size,
       user: doc.user,
       isVisible: doc.isVisible,
+      extraData: doc.extraData,
       createdAt: doc.createdAt,
     };
   }

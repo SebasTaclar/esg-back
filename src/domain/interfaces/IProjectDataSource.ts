@@ -17,8 +17,15 @@ export interface IProjectDataSource {
     observations?: string;
     offer?: string;
     totalCost?: number;
+    invoiceNumber?: string;
+    invoiceIssueDate?: string;
+    projectedPaymentDate?: string;
+    actualPaymentDate?: string;
+    purchaseOrderNumber?: string;
+    purchaseOrderDate?: string;
     services?: ProjectServiceItem[];
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Project>;
   update(
     id: number,
@@ -34,8 +41,15 @@ export interface IProjectDataSource {
       observations?: string;
       offer?: string;
       totalCost?: number;
+      invoiceNumber?: string;
+      invoiceIssueDate?: string;
+      projectedPaymentDate?: string;
+      actualPaymentDate?: string;
+      purchaseOrderNumber?: string;
+      purchaseOrderDate?: string;
       services?: ProjectServiceItem[];
       isVisible?: boolean;
+      extraData?: unknown;
     }
   ): Promise<Project>;
   delete(id: number): Promise<void>;

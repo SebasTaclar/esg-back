@@ -70,6 +70,7 @@ export class ClientPrismaAdapter implements IClientDataSource {
     resources?: Resource[];
     userId?: number;
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Client> {
     return await this.prisma.client.create({
       data: {
@@ -92,6 +93,7 @@ export class ClientPrismaAdapter implements IClientDataSource {
         resources: (data.resources as unknown as Prisma.InputJsonValue) || null,
         userId: data.userId || null,
         isVisible: data.isVisible ?? false,
+        extraData: (data.extraData as unknown as Prisma.InputJsonValue) || null,
       },
     });
   }
@@ -116,10 +118,11 @@ export class ClientPrismaAdapter implements IClientDataSource {
       showResources?: boolean;
       contacts?: Contact[];
       resources?: Resource[];
-      isVisible?: boolean;
-      userId?: number | null;
-    }
-  ): Promise<Client> {
+    isVisible?: boolean;
+    userId?: number | null;
+    extraData?: unknown;
+  }
+): Promise<Client> {
     const updateData: Record<string, unknown> = {};
 
     if (data.name !== undefined) updateData.name = data.name;
@@ -139,6 +142,7 @@ export class ClientPrismaAdapter implements IClientDataSource {
     if (data.showResources !== undefined) updateData.showResources = data.showResources;
     if (data.contacts !== undefined) updateData.contacts = data.contacts as unknown as Prisma.InputJsonValue;
     if (data.resources !== undefined) updateData.resources = data.resources as unknown as Prisma.InputJsonValue;
+    if (data.extraData !== undefined) updateData.extraData = data.extraData as unknown as Prisma.InputJsonValue;
     if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
     if (data.userId !== undefined) updateData.userId = data.userId;
 

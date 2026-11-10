@@ -5,7 +5,7 @@ import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
 import { AuthenticatedUser } from '../src/shared/authMiddleware';
-import { isAdmin, isClient } from '../src/shared/roleMiddleware';
+import { isClient } from '../src/shared/roleMiddleware';
 
 const funcQuotes = async (
   _context: Context,
@@ -138,6 +138,7 @@ const funcQuotes = async (
       observations: body.observations as string,
       services: body.services as QuoteRequest['services'],
       isVisible: body.isVisible as boolean,
+      extraData: body.extraData,
     };
 
     const quote = await quoteService.createQuote(quoteRequest);
@@ -160,6 +161,7 @@ const funcQuotes = async (
       observations: body.observations as string,
       services: body.services as UpdateQuoteRequest['services'],
       isVisible: body.isVisible as boolean,
+      extraData: body.extraData,
     };
 
     const quote = await quoteService.updateQuote(id, updateRequest);

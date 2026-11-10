@@ -41,6 +41,7 @@ export interface IClientDataSource {
     resources?: Resource[];
     userId?: number;
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Client>;
   update(
     id: number,
@@ -60,10 +61,11 @@ export interface IClientDataSource {
       isProspect?: boolean;
       observations?: string;
       showResources?: boolean;
-      contacts?: Contact[];
-      resources?: Resource[];
-      isVisible?: boolean;
-      userId?: number | null;
+    contacts?: Contact[];
+    resources?: Resource[];
+    isVisible?: boolean;
+    userId?: number | null;
+    extraData?: unknown;
     }
   ): Promise<Client>;
   delete(id: number): Promise<void>;

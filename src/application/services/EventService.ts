@@ -39,6 +39,7 @@ function toEventResponse(event: Event): EventResponse {
     coAuditors: event.coAuditors,
     normas: event.normas,
     isVisible: event.isVisible,
+    extraData: event.extraData,
     createdAt: event.createdAt,
   };
 }
@@ -156,6 +157,7 @@ export class EventService {
       coAuditors: request.coAuditors,
       normas: request.normas,
       isVisible: request.isVisible,
+      extraData: request.extraData,
     });
 
     this.logger.info(`Event created with ID: ${event.id}`);
@@ -201,6 +203,7 @@ export class EventService {
       coAuditors: request.coAuditors,
       normas: request.normas,
       isVisible: request.isVisible,
+      extraData: request.extraData,
     });
 
     this.logger.info(`Event ${id} updated successfully`);

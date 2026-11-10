@@ -5,7 +5,7 @@ import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
 import { AuthenticatedUser } from '../src/shared/authMiddleware';
-import { isAdmin, isClient } from '../src/shared/roleMiddleware';
+import { isClient } from '../src/shared/roleMiddleware';
 
 const funcProjects = async (
   _context: Context,
@@ -108,8 +108,15 @@ const funcProjects = async (
       observations: body.observations as string,
       offer: body.offer as string,
       totalCost: body.totalCost as number,
+      invoiceNumber: body.invoiceNumber as string,
+      invoiceIssueDate: body.invoiceIssueDate as string,
+      projectedPaymentDate: body.projectedPaymentDate as string,
+      actualPaymentDate: body.actualPaymentDate as string,
+      purchaseOrderNumber: body.purchaseOrderNumber as string,
+      purchaseOrderDate: body.purchaseOrderDate as string,
       services: body.services as ProjectRequest['services'],
       isVisible: body.isVisible as boolean,
+      extraData: body.extraData,
     };
 
     const project = await projectService.createProject(projectRequest);
@@ -133,8 +140,15 @@ const funcProjects = async (
       observations: body.observations as string,
       offer: body.offer as string,
       totalCost: body.totalCost as number,
+      invoiceNumber: body.invoiceNumber as string,
+      invoiceIssueDate: body.invoiceIssueDate as string,
+      projectedPaymentDate: body.projectedPaymentDate as string,
+      actualPaymentDate: body.actualPaymentDate as string,
+      purchaseOrderNumber: body.purchaseOrderNumber as string,
+      purchaseOrderDate: body.purchaseOrderDate as string,
       services: body.services as UpdateProjectRequest['services'],
       isVisible: body.isVisible as boolean,
+      extraData: body.extraData,
     };
 
     const project = await projectService.updateProject(id, updateRequest);

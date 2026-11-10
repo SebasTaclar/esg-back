@@ -24,6 +24,7 @@ export interface IEventDataSource {
     coAuditors?: string;
     normas?: string;
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Event>;
   update(
     id: number,
@@ -45,9 +46,10 @@ export interface IEventDataSource {
       userOtro?: string;
       leadAuditor?: string;
       coAuditors?: string;
-      normas?: string;
-      isVisible?: boolean;
-    }
-  ): Promise<Event>;
+    normas?: string;
+    isVisible?: boolean;
+    extraData?: unknown;
+  }
+): Promise<Event>;
   delete(id: number): Promise<void>;
 }

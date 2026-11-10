@@ -77,6 +77,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
     observations?: string;
     services: QuoteService[];
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Quote> {
     return await this.prisma.quote.create({
       data: {
@@ -90,6 +91,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
         observations: data.observations || null,
         services: data.services as unknown as Prisma.InputJsonValue,
         isVisible: data.isVisible ?? false,
+        extraData: data.extraData as Prisma.InputJsonValue,
       },
       include: { client: true, project: true },
     });
@@ -106,10 +108,11 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
       totalAmount?: number;
       validUntil?: string;
       observations?: string;
-      services?: QuoteService[];
-      isVisible?: boolean;
-    }
-  ): Promise<Quote> {
+    services?: QuoteService[];
+    isVisible?: boolean;
+    extraData?: unknown;
+  }
+): Promise<Quote> {
     const updateData: Record<string, unknown> = {};
 
     if (data.code !== undefined) updateData.code = data.code;
@@ -122,6 +125,7 @@ export class QuotePrismaAdapter implements IQuoteDataSource {
     if (data.observations !== undefined) updateData.observations = data.observations;
     if (data.services !== undefined) updateData.services = data.services as unknown as Prisma.InputJsonValue;
     if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
+    if (data.extraData !== undefined) updateData.extraData = data.extraData;
 
     return await this.prisma.quote.update({
       where: { id },

@@ -1,10 +1,10 @@
-import { NotFoundError, ConflictError } from '../../shared/exceptions';
+import { NotFoundError } from '../../shared/exceptions';
 import { Logger } from '../../shared/Logger';
 import { IProjectDataSource } from '../../domain/interfaces/IProjectDataSource';
 import { IClientDataSource } from '../../domain/interfaces/IClientDataSource';
 import { ProjectRequest, ProjectResponse, UpdateProjectRequest, ProjectServiceItem } from '../../domain/entities/Project';
 import { Project } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+
 
 function toProjectResponse(project: Project): ProjectResponse {
   const client = (project as Project & { client?: { id: number; name: string; email: string; nit: string } }).client;
@@ -24,8 +24,15 @@ function toProjectResponse(project: Project): ProjectResponse {
     observations: project.observations,
     offer: project.offer,
     totalCost: project.totalCost,
+    invoiceNumber: project.invoiceNumber,
+    invoiceIssueDate: project.invoiceIssueDate,
+    projectedPaymentDate: project.projectedPaymentDate,
+    actualPaymentDate: project.actualPaymentDate,
+    purchaseOrderNumber: project.purchaseOrderNumber,
+    purchaseOrderDate: project.purchaseOrderDate,
     services: (project.services as ProjectServiceItem[]) || null,
     isVisible: project.isVisible,
+    extraData: project.extraData,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   };
@@ -100,8 +107,15 @@ export class ProjectService {
       observations: request.observations,
       offer: request.offer,
       totalCost: request.totalCost,
+      invoiceNumber: request.invoiceNumber,
+      invoiceIssueDate: request.invoiceIssueDate,
+      projectedPaymentDate: request.projectedPaymentDate,
+      actualPaymentDate: request.actualPaymentDate,
+      purchaseOrderNumber: request.purchaseOrderNumber,
+      purchaseOrderDate: request.purchaseOrderDate,
       services: request.services,
       isVisible: request.isVisible,
+      extraData: request.extraData,
     });
 
     this.logger.info(`Project created with ID: ${project.id}`);
@@ -135,8 +149,15 @@ export class ProjectService {
       observations: request.observations,
       offer: request.offer,
       totalCost: request.totalCost,
+      invoiceNumber: request.invoiceNumber,
+      invoiceIssueDate: request.invoiceIssueDate,
+      projectedPaymentDate: request.projectedPaymentDate,
+      actualPaymentDate: request.actualPaymentDate,
+      purchaseOrderNumber: request.purchaseOrderNumber,
+      purchaseOrderDate: request.purchaseOrderDate,
       services: request.services,
       isVisible: request.isVisible,
+      extraData: request.extraData,
     });
 
     this.logger.info(`Project ${id} updated successfully`);

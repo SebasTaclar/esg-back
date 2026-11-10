@@ -1,7 +1,7 @@
 ﻿import { getPrismaClient } from '../../config/PrismaClient';
 import { IOrderDetailDataSource } from '../../domain/interfaces/IOrderDetailDataSource';
 import { OrderDetail } from '../../domain/entities/OrderDetail';
-import { Prisma } from '@prisma/client';
+import { Prisma, OrderDetail as PrismaOrderDetail } from '@prisma/client';
 
 export class OrderDetailPrismaAdapter implements IOrderDetailDataSource {
   private readonly prisma = getPrismaClient();
@@ -76,7 +76,7 @@ export class OrderDetailPrismaAdapter implements IOrderDetailDataSource {
     }
   }
 
-  private mapToOrderDetail(prismaOrderDetail: any): OrderDetail {
+  private mapToOrderDetail(prismaOrderDetail: PrismaOrderDetail): OrderDetail {
     return {
       id: prismaOrderDetail.id,
       purchaseId: prismaOrderDetail.purchaseId,

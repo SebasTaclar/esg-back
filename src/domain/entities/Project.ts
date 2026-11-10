@@ -37,8 +37,15 @@ export type ProjectRequest = {
   observations?: string;
   offer?: string;
   totalCost?: number;
+  invoiceNumber?: string;
+  invoiceIssueDate?: string;
+  projectedPaymentDate?: string;
+  actualPaymentDate?: string;
+  purchaseOrderNumber?: string;
+  purchaseOrderDate?: string;
   services?: ProjectServiceItem[];
   isVisible?: boolean;
+  extraData?: unknown;
 };
 
 export type ProjectResponse = {
@@ -60,8 +67,15 @@ export type ProjectResponse = {
   observations?: string | null;
   offer?: string | null;
   totalCost?: Decimal | number | null;
+  invoiceNumber?: string | null;
+  invoiceIssueDate?: Date | null;
+  projectedPaymentDate?: Date | null;
+  actualPaymentDate?: Date | null;
+  purchaseOrderNumber?: string | null;
+  purchaseOrderDate?: Date | null;
   services?: ProjectServiceItem[] | null;
   isVisible: boolean;
+  extraData?: unknown;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -78,6 +92,13 @@ export type UpdateProjectRequest = {
   observations?: string;
   offer?: string;
   totalCost?: number;
+  invoiceNumber?: string;
+  invoiceIssueDate?: string;
+  projectedPaymentDate?: string;
+  actualPaymentDate?: string;
+  purchaseOrderNumber?: string;
+  purchaseOrderDate?: string;
   services?: ProjectServiceItem[];
   isVisible?: boolean;
+  extraData?: unknown;
 };

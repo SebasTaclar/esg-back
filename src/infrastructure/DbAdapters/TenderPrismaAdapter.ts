@@ -1,6 +1,6 @@
 import { getPrismaClient } from '../../config/PrismaClient';
 import { ITenderDataSource } from '../../domain/interfaces/ITenderDataSource';
-import { Tender } from '@prisma/client';
+import { Tender, Prisma } from '@prisma/client';
 import { TenderServiceItem } from '../../domain/entities/Tender';
 
 export class TenderPrismaAdapter implements ITenderDataSource {
@@ -43,9 +43,13 @@ export class TenderPrismaAdapter implements ITenderDataSource {
     publicationDate: string;
     closingDate?: string;
     estimatedValue?: number;
+    officialBudget?: number;
+    offerEstimatedValue?: number;
+    projectClosingDate?: string;
     serviceItems?: TenderServiceItem[];
     observations?: string;
     isVisible?: boolean;
+    extraData?: unknown;
   }): Promise<Tender> {
     return await this.prisma.tender.create({
       data: {
@@ -59,9 +63,13 @@ export class TenderPrismaAdapter implements ITenderDataSource {
         publicationDate: new Date(data.publicationDate),
         closingDate: data.closingDate ? new Date(data.closingDate) : null,
         estimatedValue: data.estimatedValue || null,
+        officialBudget: data.officialBudget || null,
+        offerEstimatedValue: data.offerEstimatedValue || null,
+        projectClosingDate: data.projectClosingDate ? new Date(data.projectClosingDate) : null,
         serviceItems: data.serviceItems || null,
         observations: data.observations || null,
         isVisible: data.isVisible ?? false,
+        extraData: (data.extraData as Prisma.InputJsonValue) || null,
       },
     });
   }
@@ -78,12 +86,16 @@ export class TenderPrismaAdapter implements ITenderDataSource {
       status?: string;
       publicationDate?: string;
       closingDate?: string;
-      estimatedValue?: number;
-      serviceItems?: TenderServiceItem[];
-      observations?: string;
-      isVisible?: boolean;
-    }
-  ): Promise<Tender> {
+    estimatedValue?: number;
+    officialBudget?: number;
+    offerEstimatedValue?: number;
+    projectClosingDate?: string;
+    serviceItems?: TenderServiceItem[];
+    observations?: string;
+    isVisible?: boolean;
+    extraData?: unknown;
+  }
+): Promise<Tender> {
     const updateData: Record<string, unknown> = {};
 
     if (data.offerCode !== undefined) updateData.offerCode = data.offerCode;
@@ -96,8 +108,12 @@ export class TenderPrismaAdapter implements ITenderDataSource {
     if (data.publicationDate !== undefined) updateData.publicationDate = new Date(data.publicationDate);
     if (data.closingDate !== undefined) updateData.closingDate = data.closingDate ? new Date(data.closingDate) : null;
     if (data.estimatedValue !== undefined) updateData.estimatedValue = data.estimatedValue;
+    if (data.officialBudget !== undefined) updateData.officialBudget = data.officialBudget;
+    if (data.offerEstimatedValue !== undefined) updateData.offerEstimatedValue = data.offerEstimatedValue;
+    if (data.projectClosingDate !== undefined) updateData.projectClosingDate = data.projectClosingDate ? new Date(data.projectClosingDate) : null;
     if (data.serviceItems !== undefined) updateData.serviceItems = data.serviceItems;
     if (data.observations !== undefined) updateData.observations = data.observations;
+    if (data.extraData !== undefined) updateData.extraData = data.extraData;
     if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
 
     return await this.prisma.tender.update({

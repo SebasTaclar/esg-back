@@ -5,7 +5,7 @@ import { withAuthenticatedApiHandler } from '../src/shared/apiHandler';
 import { Logger } from '../src/shared/Logger';
 import { ApiResponseBuilder } from '../src/shared/ApiResponse';
 import { AuthenticatedUser } from '../src/shared/authMiddleware';
-import { isAdmin, isClient } from '../src/shared/roleMiddleware';
+import { isClient } from '../src/shared/roleMiddleware';
 
 const funcEvents = async (
   _context: Context,
@@ -93,6 +93,7 @@ const funcEvents = async (
       coAuditors: body.coAuditors as string,
       normas: body.normas as string,
       isVisible: body.isVisible as boolean,
+      extraData: body.extraData,
     };
 
     const event = await eventService.createEvent(eventRequest);
@@ -135,6 +136,7 @@ const funcEvents = async (
       coAuditors: body.coAuditors as string,
       normas: body.normas as string,
       isVisible: body.isVisible as boolean,
+      extraData: body.extraData,
     };
 
     const event = await eventService.updateEvent(id, updateRequest);
